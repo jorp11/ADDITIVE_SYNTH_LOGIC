@@ -1,0 +1,147 @@
+%additive_sine matlab simulation
+clear all
+close all
+fs = 44.1E3;
+time = 2; %second
+fundamental = 100;
+num_partial = 36;
+
+ATT = 100;
+att_slope = 1;
+dec_slope = 1;
+rel_slope = 1;
+DEC = 10;
+SUS = .7; %0-1.0
+REL = 1;
+scale_odd = 1;
+scale_even = 1;
+
+DATA_WIDTH = 16;
+ADDR_WIDTH = 14;
+ENV_WIDTH = 14;
+quarter = true;
+stretch = true;
+sine_table = sineTable(ADDR_WIDTH,DATA_WIDTH,quarter);
+
+%phase accumulator
+
+max_partial = floor(fs/2/fundamental);
+num_partial = min(max_partial,num_partial);
+freq = fundamental*[1:num_partial];
+%stretch
+if stretch == true
+    for i=1:length(freq)
+        freq(i)=freq(i)*(1.000^(i-1));
+    end
+end
+%phase increment value
+delta = round(freq/fs*2^ADDR_WIDTH);
+
+%%%%%%%%%%% REGISTER STUFF%%%%%%%%%
+register = ones(1,num_partial);
+%WAVE
+%ODDS + EVENS 
+%Slope
+%Filter
+
+register(1:2:num_partial) = scale_odd;
+register(2:2:num_partial) = scale_even;
+
+for i=1:num_partial
+    % apply slope
+    slope(i) = 1/(i)^2;
+    %slope(i) = ((freq(i)^2+.01)/(freq(i)^2+25))^.5
+end
+%slope = ones(1,num_partial);
+
+%slope = ((num_partial:-1:1)/num_partial);
+register = register.*slope;
+actual_freq = delta*fs/2^ADDR_WIDTH;
+%idea : Normalize the partial frequencies to the fundamental
+%(actual_freq(2)/actual_freq(1) - > are there studies that give max
+%deviation we can detect?
+
+%freq_error = actual_freq-freq;
+num_samples= round(time*fs);
+
+phase = zeros(num_partial,num_samples);
+%random phase
+%phase (:,1) = round((1+rand(num_partial,1))/2*2^ADDR_WIDTH);
+
+%%%%%% envelope generators
+envelope = zeros(num_partial,num_samples);
+attack = round(ATT*(ones(num_partial,1)' - att_slope*slope));
+decay = round(DEC*(ones(num_partial,1)' - slope));
+
+%decay = round(DEC*ones(num_partial,1)'.*(dec_slope*slope));
+release = round(REL*(ones(num_partial,1)' - rel_slope*slope));
+sustain = SUS*(2^ENV_WIDTH)*ones(num_partial,1); 
+
+envelope(:,1) = 0;
+state = "ATT";
+for j=1:num_partial
+    for i=2:num_samples
+        if state == "ATT"
+            %Linear attack
+            envelope(j,i) = envelope(j,i-1) + attack(j);
+            %exp attack 
+            if envelope(j,i) >= 2^ENV_WIDTH
+                state = "DEC";
+            end
+        elseif state == "DEC"
+            envelope(j,i) = envelope(j,i-1) - decay(j);
+            if envelope(j,i) <= sustain(j)
+                state = "SUS";
+            end
+        elseif state == "SUS"
+            envelope(j,i) = sustain(j);
+            if i >= num_samples/2
+                state = "REL";
+            end
+        elseif state == "REL"
+            envelope(j,i) = envelope(j,i-1) - release(j);
+            if envelope(j,i) <= 0
+                state = "OFF";
+            end
+        elseif state == "OFF"
+            envelope(j,i) = 0;
+            
+        end
+    end
+    state = "ATT";
+end
+output = zeros(num_partial,num_samples);
+
+for j=1:num_partial
+    for i=2:num_samples
+        phase (j,i) = mod(phase(j,i-1)+delta(j),2^ADDR_WIDTH);
+        amp = register(j)*envelope(j,i)/2^ENV_WIDTH;
+        output(j,i) = amp*readSineTable(sine_table,phase(j,i),ADDR_WIDTH,quarter);
+    end
+end
+
+output = sum(output)/2^(DATA_WIDTH+ceil(log2(num_partial)));%+noise_level*rand(1,num_samples);
+%output = tanh(2*output);
+%SOUND
+sound(output,fs);
+
+
+
+% SPECTRUM
+T = 1/fs;             % Sampling period
+L = num_samples;             % Length of signal
+t = (0:L-1)*T;        % Time vector
+f = fs*(0:(L/2))/L;
+Y = fft(output);
+P2 = abs(Y/L);
+P1 = P2(1:L/2+1);
+P1(2:end-1) = 2*P1(2:end-1);
+f = fs*(0:(L/2))/L/1000;
+plot(f,P1)
+xlim([0 fs/2000])
+title('Single-Sided Amplitude Spectrum of X(t)')
+xlabel('f (kHz)')
+ylabel('|P1(f)|')
+
+figure()
+plot(envelope')

@@ -1,0 +1,57 @@
+ADDR_WIDTH = 6;
+DATA_WIDTH = 8;
+quarter_table = true;
+pi_phase = 2^(ADDR_WIDTH-1)
+
+num_points = 2^ADDR_WIDTH;
+t = [0:num_points-1];
+
+sine_table = round(2^DATA_WIDTH*sin((t+.5)/(num_points)*2*pi));
+if quarter_table == true
+    sine_tanle = sine_table(1:num_points/4);
+end
+
+%TEST
+
+%phase accumulator
+fs = 22.1E3;
+freq = 350;
+delta = round(freq/fs*2^ADDR_WIDTH);
+actual_freq = delta*fs/2^ADDR_WIDTH;
+freq_error = actual_freq-freq;
+time = .0051; %second
+num_samples= round(time*fs);
+phase = zeros(1,num_samples);
+output = zeros(1,num_samples);
+sign = zeros(1,num_samples);
+inver
+
+for i=2:num_samples
+    phase (i) = mod(phase(i-1)+delta,2^ADDR_WIDTH);
+end
+for i=2:num_samples
+    bin_phase = de2bi(phase(i),ADDR_WIDTH,'right-msb')
+    sign(i) = bin_phase(ADDR_WIDTH);
+    switch num2str(bin_phase(ADDR_WIDTH-1:ADDR_WIDTH))
+        case '0  0' 
+            output(i) = sine_table(bi2de(bin_phase(1:ADDR_WIDTH-2))+1);
+            "Q1"
+        case '1  1 '
+            output(i) = -1*sine_table(bi2de(~bin_phase(1:ADDR_WIDTH-2))+1);
+            "Q2"
+        case '0  1'
+            output(i) = -1*sine_table(bi2de(~bin_phase(1:ADDR_WIDTH-2))+1);
+            "Q3"
+        case '1  0'
+            output(i) = sine_table(bi2de(bin_phase(1:ADDR_WIDTH-2))+1);
+            "Q4"
+        otherwise
+        "oops"
+    end
+           
+    
+
+end
+
+
+stem(output)
