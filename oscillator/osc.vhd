@@ -12,7 +12,7 @@ entity osc is
 			rst_i: in std_logic;
 			freq_i : in std_logic_vector (PA_WIDTH-1 downto 0);
 			enable_i : in std_logic;
-			sin_o : out std_logic_vector (PA_WIDTH-1 downto 0)
+			sin_o : out std_logic_vector (ROM_DATA_WIDTH-1 downto 0)
 			);
 end osc;
 
