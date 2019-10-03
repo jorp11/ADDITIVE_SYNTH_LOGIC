@@ -25,7 +25,7 @@ signal phase_acc : std_logic_vector(PA_WIDTH downto 0);
 			if (rst_i = '1') then
 				phase_acc <= (others => '0');
 			elsif (enable_i = '1') then
-					phase_acc <= std_logic_vector(unsigned(phase_acc) + unsigned(freq_word_i));
+					phase_acc <= std_logic_vector(unsigned(phase_acc) + unsigned(freq_i));
 			end if;
 		end if;
 	end process;
