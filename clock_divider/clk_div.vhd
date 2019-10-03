@@ -1,12 +1,10 @@
 -- This module takes a clock and generates a slower clock with an integer divisor ratio
 
-
 library ieee;
 use ieee.std_logic_1164.all;
 
 entity clk_div is 
-	generic (DIVRATIO : integer);
-
+	generic (DIVRATIO : integer :=32);
 	port (clk_i: in std_logic; 
 			rst_i: in std_logic;
 			clk_o: out std_logic);
@@ -37,5 +35,6 @@ architecture behavioral of clk_div is
     end process;
 	 
 	 clk_o <= temp;
+	 
 	end behavioral;
 			
