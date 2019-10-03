@@ -1,0 +1,6 @@
+*.bak
+*.rpt
+*.qmsg
+*.flock
+*.db_info
+
