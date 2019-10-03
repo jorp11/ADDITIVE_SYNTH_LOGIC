@@ -77,3 +77,6 @@ db/additive_synth.cmp.rdb
 db/additive_synth.cmp.rdb
 db/additive_synth.cmp.rdb
 db/additive_synth.cmp.rdb
+*.qsf
+additive_synth.qsf
+db/additive_synth.cmp.rdb

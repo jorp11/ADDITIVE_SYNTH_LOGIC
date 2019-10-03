@@ -3,6 +3,7 @@ library  ieee;
 use  ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
+
 entity additive_synth is 
 	port (clk_i: in std_logic; -- 50 MHZ clock in
 			rst_i: in std_logic; -- Rest in - N/C
@@ -39,12 +40,12 @@ architecture behavioral of additive_synth is
 	end component;
 	
 	component osc is 
-	generic (WIDTH : integer);
+	generic (PA_WIDTH : integer);
 	port (clk_i: in std_logic;
 			rst_i: in std_logic;
-			freq_i : in std_logic_vector (WIDTH downto 0);
+			freq_i : in std_logic_vector (PA_WIDTH-1 downto 0);
 			enable_i : in std_logic;
-			sin_o : out std_logic_vector (WIDTH downto 0)
+			sin_o : out std_logic_vector (PA_WIDTH-1 downto 0)
 			);
 	end component;
 
@@ -73,7 +74,7 @@ architecture behavioral of additive_synth is
 			);
 	--------------------------------	
 		osc1 : osc 
-		GENERIC MAP(WIDTH => 32)
+		GENERIC MAP(PA_WIDTH => 32)
 		PORT MAP (clk_i=>clk_98,
 			rst_i => rst_98,
 			freq_i => x"00000001",
