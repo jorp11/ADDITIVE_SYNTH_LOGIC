@@ -6,7 +6,7 @@ use ieee.numeric_std.all;
 
 entity osc is 
 	generic (PA_WIDTH : integer := 32;-- TODO REPLACE W CONST
-			ROM_DATA_WIDTH : integer 18;-- TODO REPLACE W CONST
+			ROM_DATA_WIDTH : integer :=18;-- TODO REPLACE W CONST
 			ROM_ADDR_WIDTH : integer := 14);-- TODO REPLACE W CONST);
 	port   (clk_i: in std_logic;
 			rst_i: in std_logic;
@@ -14,21 +14,21 @@ entity osc is
 			enable_i : in std_logic;
 			sin_o : out std_logic_vector (PA_WIDTH-1 downto 0)
 			);
-end phase_acc;
+end osc;
 
-architecture behavioral of phase_acc is
+architecture behavioral of osc is
 	component phase_acc is 
-	generic (PA_WIDTH : integer := 32; 
+	generic (PA_WIDTH : integer := 32); 
 	port   (clk_i: in std_logic;
 			rst_i: in std_logic;
-			freq_i : in std_logic_vector (PA_WIDTH-1 downto 0);
+			freq_i : in std_logic_vector ((PA_WIDTH-1) downto 0);
 			enable_i : in std_logic;
-			phase_o : out std_logic_vector (PA_WIDTH-1 downto 0)
+			phase_o : out std_logic_vector ((PA_WIDTH-1) downto 0)
 			);
 	end component;
-	signal phase_acc_o : std_logic_vector(PA_WIDTH downto 0);
-	signal rom_phase_i: std_logic_vector(ROM_ADDR_WIDTH downto 0);
-	signal roma_out, romb_out : std_logic_vector(ROM_DATA_WIDTH downto 0);
+	signal phase_acc_o : std_logic_vector(PA_WIDTH-1 downto 0);
+	signal rom_phase_i: std_logic_vector(ROM_ADDR_WIDTH-1 downto 0);
+	signal roma_out, romb_out : std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
 	--------------------------------
 	begin
 	
@@ -38,17 +38,17 @@ architecture behavioral of phase_acc is
 			rst_i => rst_i,
 			freq_i => freq_i,
 			enable_i => enable_i,
-			phase_o => phase_acc_out
+			phase_o => phase_acc_o
 			);
-
-	phase_map : phase_rom_map
-	GENERIC MAP (PA_WIDTH => PA_WIDTH,
-				ROM_WIDTH => ROM_ADDR_WIDTH)
-	PORT MAP (clk_i=> clk_i,
-			 rst_i => rst_i, 
-			 phase_i => phase_acc_out,
-			 rom_phase_o => rom_phase_i
-		);
+--
+--	phase_map : phase_rom_map
+--	GENERIC MAP (PA_WIDTH => PA_WIDTH,
+--				ROM_WIDTH => ROM_ADDR_WIDTH)
+--	PORT MAP (clk_i=> clk_i,
+--			 rst_i => rst_i, 
+--			 phase_i => phase_acc_out,
+--			 rom_phase_o => rom_phase_i
+--		);
 	-- INSTANTIATE ROM and interpolator!
 	--rom : sin_rom
 	--GENERIC MAP (DATA_WIDTH => ROM_DATA_WIDTH;
