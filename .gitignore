@@ -44,7 +44,6 @@ output_files/*
 *.wlf
 *.ini
 *.mpf
-*.vhd
 clock_divider/simulation/work/_info
 clock_divider/simulation/work/_vmake
 *.mti
