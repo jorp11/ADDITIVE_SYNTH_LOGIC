@@ -22,7 +22,6 @@ output_files/*
 *.summary
 *.xrf
 *.sopcinfo
-*.v
 *.rpt
 *.sft
 *.bpm
