@@ -2,7 +2,7 @@ simulation/modelsim/*
 incremental_db/*
 db/*
 output_files/*
-oscillator/osc.vhd.bak
+*.bak
 *.rdb
 *.hif
 *.hsd
@@ -37,7 +37,6 @@ oscillator/osc.vhd.bak
 *.qmsg
 *.flock
 *.db_info
-
 *.qws
 *.qdb
 *.qtl
@@ -50,4 +49,3 @@ clock_divider/simulation/work/_info
 clock_divider/simulation/work/_vmake
 *.mti
 *.db_info
-*.rdb
