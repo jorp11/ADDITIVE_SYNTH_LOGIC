@@ -46,8 +46,9 @@ output_files/*
 clock_divider/simulation/work/
 clock_divider/simulation/work/
 i2s/simulation/work/
+i2s/simulation/transcript
 *.mti
 *.db_info
 additive_synth.qsf
 additive_synth.qws
-db/
+db/*
