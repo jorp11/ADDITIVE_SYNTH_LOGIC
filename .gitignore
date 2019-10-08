@@ -52,3 +52,7 @@ i2s/simulation/transcript
 additive_synth.qsf
 additive_synth.qws
 db/*
+db/additive_synth.db_info
+db/additive_synth.cmp.rdb
+db/additive_synth.db_info
+additive_synth.qws
