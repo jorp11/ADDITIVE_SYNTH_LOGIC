@@ -27,8 +27,9 @@ architecture behavioral of osc is
 		);
 	end component;
 	signal phase_acc_o        : std_logic_vector(PA_WIDTH-1 downto 0);
+	signal sin_out 			  : std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
 	signal rom_addr           : std_logic_vector(ROM_ADDR_WIDTH-1 downto 0);
-	signal roma_out, romb_out : std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
+	signal roma_out, romb_out,roma_out_n1 : std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
 	signal negate             : std_logic_vector(1 downto 0); -- used to negate rom address
                                                               --------------------------------
 begin
@@ -46,31 +47,23 @@ begin
 	begin
 		if rising_edge(clk_i) then
 			if enable_i = '1' then
-				rom_out_n1 <= roma_out; -- TODO deal with this
+				roma_out_n1 <= roma_out; -- TODO deal with this
 				negate(0)  <= phase_acc_o(PA_WIDTH-1);
 				if (phase_acc_o(PA_WIDTH-2) ='1')then
-					rom_addr <= phase_acc_o (PA_WIDTH-2 downto (PA_WIDTH-ROM_ADDR_WIDTH));
+					rom_addr <= phase_acc_o (PA_WIDTH-2 downto (PA_WIDTH-ROM_ADDR_WIDTH-1));
 				else
-					rom_addr <= not (phase_acc_o (PA_WIDTH-2 downto (PA_WIDTH-ROM_ADDR_WIDTH)));
+					rom_addr <= not (phase_acc_o (PA_WIDTH-2 downto (PA_WIDTH-ROM_ADDR_WIDTH-1)));
 				end if;
 				negate(1) <= negate(0);
 				if (negate(1)= '1')then
-					sin_out <= - signed(roma_out);
+					sin_out <= roma_out_n1;-- signed(roma_out);
 				else
 					sin_out <= roma_out_n1;
 				end if;
 			end if;
 		end if;
 	end process;
---	phase_map : phase_rom_map
---	GENERIC MAP (PA_WIDTH => PA_WIDTH,
---				ROM_WIDTH => ROM_ADDR_WIDTH)
---	PORT MAP (clk_i=> clk_i,
---			 rst_i => rst_i, 
---			 phase_i => phase_acc_out,
---			 rom_phase_o => rom_phase_i
---		);
--- INSTANTIATE ROM and interpolator!
+
 --rom : sin_rom
 --GENERIC MAP (DATA_WIDTH => ROM_DATA_WIDTH;
 --				ADDR_WIDTH => ROM_ADDR_WIDTH)
