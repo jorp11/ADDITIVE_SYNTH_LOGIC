@@ -43,7 +43,11 @@ output_files/*
 *.wlf
 *.ini
 *.mpf
-clock_divider/simulation/work/_info
-clock_divider/simulation/work/_vmake
+clock_divider/simulation/work/
+clock_divider/simulation/work/
+i2s/simulation/work/
 *.mti
 *.db_info
+additive_synth.qsf
+additive_synth.qws
+db/
