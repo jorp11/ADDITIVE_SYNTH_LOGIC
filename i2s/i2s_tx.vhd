@@ -27,16 +27,17 @@ entity i2s_tx is
         bclk_i      : in  std_logic; -- Bit clock
         lr_ws_i     : in  std_logic; -- Word select /LR clk
         sampstart_i : in  std_logic;
-        audio_l_i   : in  std_logic_vector (BITDEPTH downto 0);
-        audio_r_i   : in  std_logic_vector (BITDEPTH downto 0);
+        audio_l_i   : in  std_logic_vector (BITDEPTH-1 downto 0);
+        audio_r_i   : in  std_logic_vector (BITDEPTH-1 downto 0);
         tx_o        : out std_logic);
-end clk_div;
+end i2s_tx;
 
 architecture behavioral of i2s_tx is
-    signal audio_l : std_logic_vector (BITDEPTH-1 downto 0);
-    signal audio_r : std_logic_vector (BITDEPTH-1 downto 0);
+constant NUM_TX_BITS : integer := 32;
+    signal audio_l : std_logic_vector (31 downto 0);
+    signal audio_r : std_logic_vector (31 downto 0);
     signal tx_bit  : std_logic;
-    signal bclk_n1, bclk_n2 : std_logic;
+    signal bclk_n1, bclk_n2,bclk_trans : std_logic;
 --------------------------------
 begin
     process (clk_i)
@@ -47,18 +48,30 @@ begin
                 audio_l <= (others => '0');
                 audio_r <= (others => '0');
             elsif sampstart_i = '1' then
-                audio_l <= "0" & audio_l_i & "0000000";
+--				                audio_l <= (31 => '0', 
+--									 30 downto 30-BITDEPTH+1 => audio_l_i, 
+--									 others => '0');
+
+                audio_l <= "0" & audio_l_i & "0000000"; 
                 audio_r <= "00" & audio_r_i & "000000";
+--					   audio_r <= (31 => "0", 
+--										30 =>"0", 
+--										29 downto 29-BITDEPTH+1 => audio_r_i,
+--										others => "0");
+
                 tx_bit  <= '0';
-            elsif (lrclk_i = '1')then
+            elsif (lr_ws_i = '1')then
                 -- LRclk high so shift out on right channel
-                if (bclk_falling = '1') then
-                    audio_r <= audio_r(BITDEPTH-2 downto 0) & "0";
-                    tx_bit  <= audio_r(BITDEPTH-1);
+                if (bclk_trans = '1') then
+						  tx_bit  <= audio_r(NUM_TX_BITS-1);
+                    audio_r <= audio_r(NUM_TX_BITS-2 downto 0) & "0";
                 end if;
             else
-                audio_r <= audio_l(BITDEPTH-2 downto 0) & "0";
-                tx_bit  <= audio_l(BITDEPTH-1);
+					if (bclk_trans = '1') then
+						tx_bit  <= audio_l(NUM_TX_BITS-1);
+						audio_r <= audio_l(NUM_TX_BITS-2 downto 0) & "0";
+					end if;
+
             end if;
         end if;
     end process;
@@ -67,10 +80,13 @@ begin
 
     process (clk_i)
     begin
+	 if rising_edge(clk_i) then
         bclk_n1 <= bclk_i;
         bclk_n2 <= bclk_n1;
+		  end if;
     end process;
-    bclk_trans <= (not bclk_i) and (bclk_n1 & bclk_n2);
+    bclk_trans <= ((bclk_i) nor (bclk_n1)) and ( bclk_n2);
+
 
 
 end behavioral;
