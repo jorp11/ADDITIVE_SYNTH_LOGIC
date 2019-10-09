@@ -2,21 +2,21 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-entity i2s_tx_tb is
-end i2s_tx_tb;
+entity i2s_rx_tb is
+end i2s_rx_tb;
 
 
-architecture behaviour of i2s_tx_tb is
+architecture behaviour of i2s_rx_tb is
 	constant clock_period : time := 20 ns;
 
 	constant PA_WIDTH :integer := 32;
 	constant ROM_DATA_WIDTH :integer := 18;
 	constant ROM_ADDR_WIDTH :integer := 14;
- constant OUT_BIT_DEPTH : integer := 24;
+ 	constant OUT_BIT_DEPTH : integer := 24;
 
 	component i2s_tx is
-    generic (BITDEPTH :    integer );
-    port (clk_i       : in std_logic;
+   	 generic (BITDEPTH :    integer );
+    	port (clk_i       : in std_logic;
         rst_i       : in  std_logic;
         bclk_i      : in  std_logic; -- Bit clock
         lr_ws_i     : in  std_logic; -- Word select /LR clk
@@ -24,8 +24,20 @@ architecture behaviour of i2s_tx_tb is
         audio_l_i   : in  std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
         audio_r_i   : in  std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
         tx_o        : out std_logic);
-end component;
+	end component;
 	
+	component i2s_rx is
+    	generic (BITDEPTH :    integer);
+   	 port (clk_i       : in std_logic;
+        rst_i       : in  std_logic;
+        bclk_i      : in  std_logic; -- Bit clock
+        lr_ws_i     : in  std_logic; -- Word select /LR clk
+        sampstart_i : in  std_logic;
+        audio_l_o   : out  std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
+        audio_r_o   : out  std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
+        rx_i        : in std_logic);
+	end component;
+
 	 component audio_clk is
     generic (MCLK_DIVRATIO : integer;  -- 98.3MHZ/8 = 12.28 MHz Mclk (48Khz*256)
         LRCLK_DIVRATIO   : integer; -- 98.3Mhz/2048 = 48khz
@@ -40,7 +52,7 @@ end component;
     );
 	end component;
 	signal mclk, bclk,lr_ws, samp_start : std_logic;
-	signal audio_l, audio_r : std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
+	signal audio_l, audio_r,audio_l_rx,audio_r_rx : std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
 	signal codec_nrst : std_logic;
 	signal rst,clk : std_logic := '0';
 	signal i2s_tx_o : std_logic;
@@ -60,7 +72,7 @@ end component;
         samp_start_o  => samp_start
     );
 	
-		DUT : i2s_tx
+		tx : i2s_tx
 		generic map(BITDEPTH => OUT_BIT_DEPTH )
 		port map(clk_i    => clk,
         rst_i       	=> rst,
@@ -71,7 +83,17 @@ end component;
         audio_r_i    => audio_r,
         tx_o         => i2s_tx_o);
 		  
-
+		DUT : i2s_rx
+		generic map(BITDEPTH => OUT_BIT_DEPTH )
+		port map(clk_i    => clk,
+        rst_i       	=> rst,
+        bclk_i      	=> bclk, -- Bit clock
+        lr_ws_i     	=> lr_ws,  -- Word select /LR clk
+        sampstart_i 	=> samp_start,
+        audio_l_o    => audio_l_rx,
+        audio_r_o    => audio_r_rx,
+        rx_i         => i2s_tx_o);
+		 
 		  
 		  
 	clock_process :process
@@ -96,7 +118,7 @@ end component;
 				wait for 10000 ns;
 		--		audio_r <=  (23 => '1',others =>'1');   
 		--		audio_l <=  (23 => '1', others =>'1');
-				wait for 500000 ns;
+				wait for 1000000 ns;
             assert false
 				report "simulation over"
 				severity failure;
