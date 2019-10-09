@@ -88,7 +88,7 @@ end component;
 				--audio_r <=  (23 => '1',others =>'1');   
 				--audio_l <=  (23 => '1', others =>'1');
 		audio_r<= x"AAAAAA";
-		audio_l <= x"555555";
+		audio_l <= x"ffffff";
             wait for 1000 ns;
 				--audio_r <=  (23 => '1', others =>'1');
 		--		audio_l <=  (23 => '1',others =>'1');    	    

@@ -47,7 +47,8 @@ begin
                 tx_bit  <= '0';
                 audio_l <= (others => '0');
                 audio_r <= (others => '0');
-            elsif sampstart_i = '1' then
+            else
+		if sampstart_i = '1' then
 --				                audio_l <= (31 => '0', 
 --									 30 downto 30-BITDEPTH+1 => audio_l_i, 
 --									 others => '0');
@@ -69,10 +70,11 @@ begin
             else
 					if (bclk_trans = '1') then
 						tx_bit  <= audio_l(NUM_TX_BITS-1);
-						audio_r <= audio_l(NUM_TX_BITS-2 downto 0) & "0";
+						audio_l <= audio_l(NUM_TX_BITS-2 downto 0) & "0";
 					end if;
 
             end if;
+end if;
         end if;
     end process;
 
