@@ -8,6 +8,7 @@ entity osc_ctrl is
 	generic (num_osc : integer := 4;
 		PA_WIDTH       : integer := 32;
 		ROM_DATA_WIDTH : integer := 18;
+		ROM_ADDR_WIDTH : integer := 14); -- TODO REPLACE W CONST);
 	port (clk_i : in std_logic;
 		rst_i          : in  std_logic;
 		freq_i         : in  std_logic_vector (PA_WIDTH-1 downto 0);
@@ -64,7 +65,7 @@ begin
       		--else
         	--	r_Var_Done <= '0';
       		end if;
-			elsif 
+		
 
 			end if;
 		end if;
