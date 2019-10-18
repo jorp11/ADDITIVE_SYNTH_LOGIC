@@ -38,7 +38,7 @@ architecture behavioral of osc_ctrl is
 	signal enable_array : enable_array_t;
 --------------------------------
 begin
-	gen : for i in 0 to num_osc-1 generate
+	gen_osc : for i in 0 to num_osc-1 generate
 		--uut: FA port map (a => a(i), b => b(i), c_in => c(i), s => s(i), c_out => c(i+1));
 		osc : osc
 			GENERIC MAP(PA_WIDTH => PA_WIDTH,
@@ -58,15 +58,12 @@ begin
 	begin
 		if rising_edge(clk_i) then
 			if rst_i = '1' then
-				count := count + 1; 
-			elsif count = 5 then
-        		--r_Var_Done <= '1';
-        		Count := 0;
-      		--else
-        	--	r_Var_Done <= '0';
-      		end if;
-		
-
+				count := count + 1;
+			elsif count = num_osc then
+				--r_Var_Done <= '1';
+				count := 0;
+			--else
+			--	r_Var_Done <= '0';
 			end if;
 		end if;
 	end process;
