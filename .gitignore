@@ -58,6 +58,7 @@ db/additive_synth.cmp.rdb
 db/additive_synth.db_info
 additive_synth.qws
 *.qws
+*.qsf
 clock_divider/.DS_Store
 phase_accumulator/.DS_Store
 .DS_Store
@@ -65,3 +66,4 @@ oscillator/.DS_Store
 reset_sync/.DS_Store
 i2s/.DS_Store
 additive_synth_top_level/.DS_Store
+
