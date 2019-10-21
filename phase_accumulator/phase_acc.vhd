@@ -8,9 +8,9 @@ entity phase_acc is
 	generic (PA_WIDTH : integer := 32);
 	port   (clk_i: in std_logic;
 			rst_i: in std_logic;
-			freq_i : in std_logic_vector (PA_WIDTH-1 downto 0);
+			freq_i : in unsigned (PA_WIDTH-1 downto 0);
 			enable_i : in std_logic;
-			phase_o : out std_logic_vector (PA_WIDTH-1 downto 0)
+			phase_o : out unsigned (PA_WIDTH-1 downto 0)
 			);
 end phase_acc;
 

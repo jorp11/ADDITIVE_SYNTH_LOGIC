@@ -35,13 +35,6 @@ architecture behavioral of additive_synth is
 	);
 	end component;
 		
-	component clk_div is 
-		generic (DIVRATIO : integer);
-		port (clk_i: in std_logic; --98.03 MHz Clock
-				rst_i: in std_logic;
-				clk_o: out std_logic);
-	end component;
-
 	component reset_sync is 
 		port (clk_i: in std_logic;
 				async_rst_i: in std_logic;
@@ -86,6 +79,23 @@ end component;
         samp_start_o : out std_logic
     );
 	end component;
+	----------------------
+	component osc_bank is
+	generic (NUM_OSC : integer := 4;
+			PA_WIDTH : integer := 32;   
+			ROM_DATA_WIDTH : integer := 18;  
+			ROM_ADDR_WIDTH : integer := 14); 
+	port (clk_i : in std_logic;
+		rst_i    : in  std_logic;
+		freq_i   : in  std_logic_vector (PA_WIDTH-1 downto 0);
+		osc_en_i : in std_logic_vector (NUM_OSC -1 downto 0); -- ONE hot enable for oscillator bank.
+		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
+		amp_i	 : in std_logic_vector (ROM_DATA_WIDTH-1 downto 0);
+		--osc_ind_o : out integer;
+		phase_o    : out std_logic_vector (ROM_DATA_WIDTH-1 downto 0)
+	);
+end component;
+	
 ----- SIGNALS --------
 	signal clk_98: std_logic;
 	signal rst: std_logic;
@@ -111,23 +121,17 @@ end component;
 			locked => pll_lock
 			);
 	--------------------------------	
-		osc1 : osc 
-		GENERIC MAP(PA_WIDTH => PA_WIDTH,
-						ROM_DATA_WIDTH =>ROM_DATA_WIDTH,  
-						ROM_ADDR_WIDTH => ROM_ADDR_WIDTH)
-		PORT MAP (clk_i=>clk_98,
-			rst_i => rst,
-			freq_i => x"00000001",
-			enable_i => '1',
-			sin_o => osc_out
-			);
-		--------------------------------	
-		clk_div_48khz :  clk_div  
-		generic map(DIVRATIO => 2048)
-		port map(clk_i => clk_98,
-			rst_i => rst,
-			clk_o =>  clk_48k
-			);	
+--		osc1 : osc 
+--		GENERIC MAP(PA_WIDTH => PA_WIDTH,
+--						ROM_DATA_WIDTH =>ROM_DATA_WIDTH,  
+--						ROM_ADDR_WIDTH => ROM_ADDR_WIDTH)
+--		PORT MAP (clk_i=>clk_98,
+--			rst_i => rst,
+--			freq_i => x"00000001",
+--			enable_i => '1',
+--			sin_o => osc_out
+--			);
+
 			--------------------------------
 		audio_clock : audio_clk
 		generic map(MCLK_DIVRATIO => 8,  -- 98.3MHZ/8 = 12.28 MHz Mclk (48Khz*256)
