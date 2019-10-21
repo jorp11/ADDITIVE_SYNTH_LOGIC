@@ -12,8 +12,8 @@ architecture behaviour of osc_tb is
 	constant PA_WIDTH :integer := 32;
 	constant ROM_DATA_WIDTH :integer := 18;
 	constant ROM_ADDR_WIDTH :integer := 14;
-	component osc is 
 
+	component osc is 
 	generic (PA_WIDTH : integer := 32;-- TODO REPLACE W CONST
 			ROM_DATA_WIDTH : integer :=ROM_DATA_WIDTH;-- TODO REPLACE W CONST
 			ROM_ADDR_WIDTH : integer := ROM_ADDR_WIDTH);-- TODO REPLACE W CONST);
@@ -24,6 +24,7 @@ architecture behaviour of osc_tb is
 			sin_o : out std_logic_vector (ROM_DATA_WIDTH-1 downto 0)
 			);
 	end component;
+
 	signal enable, rst,clk : std_logic := '0';
 	signal freq: std_logic_vector (PA_WIDTH-1 downto 0);
 	signal sin_o : std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
@@ -53,7 +54,8 @@ architecture behaviour of osc_tb is
         begin
             rst <= '1';
 				freq <= (others => '0');
-            wait for 1000 ns;
+            wait for 1000 ns;        
+            wait until clk = '0' and clk'event;
 				freq <= std_logic_vector(to_signed(100,PA_WIDTH));
     	    rst <= '0';
 	    wait for 50000 ns;
