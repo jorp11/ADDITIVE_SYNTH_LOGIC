@@ -15,20 +15,20 @@ entity phase_acc is
 end phase_acc;
 
 architecture behavioral of phase_acc is
-signal phase_acc : std_logic_vector(PA_WIDTH downto 0);
+signal phase_acc : unsigned(PA_WIDTH-1 downto 0);
 	--------------------------------
 	begin
 	
-		process (clk_i,rst_i)
+		process (clk_i)
 		begin
 		if rising_edge(clk_i) then
 			if (rst_i = '1') then
 				phase_acc <= (others => '0');
 			elsif (enable_i = '1') then
-					phase_acc <= std_logic_vector(unsigned(phase_acc) + unsigned(freq_i));
+					phase_acc <=phase_acc + freq_i;--std_logic_vector(unsigned(phase_acc) + unsigned(freq_i));
 			end if;
 		end if;
 	end process;
-	 
+	phase_o <= phase_acc;
 end behavioral;
 			

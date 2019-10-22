@@ -150,11 +150,13 @@ set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK=00
 set_global_assignment -name SLD_NODE_PARAMETER_ASSIGNMENT "SLD_INVERSION_MASK_LENGTH=36" -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[3] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
 set_instance_assignment -name POST_FIT_CONNECT_TO_SLD_NODE_ENTITY_PORT crc[11] -to auto_signaltap_0|vcc -section_id auto_signaltap_0
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name SLD_FILE db/stp_auto_stripped.stp
+set_global_assignment -name VHDL_FILE oscillator/osc_bank.vhdl
 set_global_assignment -name VHDL_FILE i2s/i2s_tx.vhd
 set_global_assignment -name VHDL_FILE clock_divider/audio_clk.vhd
 set_global_assignment -name VHDL_FILE reset_sync/reset_sync.vhd
 set_global_assignment -name VHDL_FILE phase_accumulator/phase_acc.vhd
-set_global_assignment -name VHDL_FILE oscillator/osc.vhd
 set_global_assignment -name VHDL_FILE clock_divider/clk_div.vhd
 set_global_assignment -name VHDL_FILE additive_synth_top_level/additive_synth.vhd
 set_global_assignment -name SOURCE_FILE pll.cmp
@@ -162,5 +164,5 @@ set_global_assignment -name SDC_FILE additive_synth.sdc
 set_global_assignment -name QIP_FILE pll.qip
 set_global_assignment -name SIGNALTAP_FILE output_files/stp.stp
 set_global_assignment -name SOURCE_FILE db/additive_synth.cmp.rdb
-set_global_assignment -name SLD_FILE db/stp_auto_stripped.stp
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name VHDL_FILE i2s/i2s_rx.vhd
+set_global_assignment -name QIP_FILE sine_rom.qip

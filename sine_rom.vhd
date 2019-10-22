@@ -42,8 +42,8 @@ USE altera_mf.altera_mf_components.all;
 ENTITY sine_rom IS
 	PORT
 	(
-		address_a		: IN STD_LOGIC_VECTOR (13 DOWNTO 0);
-		address_b		: IN STD_LOGIC_VECTOR (13 DOWNTO 0);
+		address_a		: IN STD_LOGIC_VECTOR (11 DOWNTO 0);
+		address_b		: IN STD_LOGIC_VECTOR (11 DOWNTO 0);
 		clock		: IN STD_LOGIC  := '1';
 		q_a		: OUT STD_LOGIC_VECTOR (15 DOWNTO 0);
 		q_b		: OUT STD_LOGIC_VECTOR (15 DOWNTO 0)
@@ -74,19 +74,19 @@ BEGIN
 		clock_enable_output_a => "BYPASS",
 		clock_enable_output_b => "BYPASS",
 		indata_reg_b => "CLOCK0",
-		init_file => "./matlab/sine_rom.hex",
+		init_file => "sine_rom.hex",
 		intended_device_family => "Cyclone IV E",
 		lpm_type => "altsyncram",
-		numwords_a => 16384,
-		numwords_b => 16384,
+		numwords_a => 4096,
+		numwords_b => 4096,
 		operation_mode => "BIDIR_DUAL_PORT",
 		outdata_aclr_a => "NONE",
 		outdata_aclr_b => "NONE",
-		outdata_reg_a => "CLOCK0",
-		outdata_reg_b => "CLOCK0",
+		outdata_reg_a => "UNREGISTERED",
+		outdata_reg_b => "UNREGISTERED",
 		power_up_uninitialized => "FALSE",
-		widthad_a => 14,
-		widthad_b => 14,
+		widthad_a => 12,
+		widthad_b => 12,
 		width_a => 16,
 		width_b => 16,
 		width_byteena_a => 1,
@@ -142,16 +142,16 @@ END SYN;
 -- Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 -- Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 -- Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
--- Retrieval info: PRIVATE: MEMSIZE NUMERIC "262144"
+-- Retrieval info: PRIVATE: MEMSIZE NUMERIC "65536"
 -- Retrieval info: PRIVATE: MEM_IN_BITS NUMERIC "0"
--- Retrieval info: PRIVATE: MIFfilename STRING "./matlab/sine_rom.hex"
+-- Retrieval info: PRIVATE: MIFfilename STRING "sine_rom.hex"
 -- Retrieval info: PRIVATE: OPERATION_MODE NUMERIC "3"
 -- Retrieval info: PRIVATE: OUTDATA_ACLR_B NUMERIC "0"
--- Retrieval info: PRIVATE: OUTDATA_REG_B NUMERIC "1"
+-- Retrieval info: PRIVATE: OUTDATA_REG_B NUMERIC "0"
 -- Retrieval info: PRIVATE: RAM_BLOCK_TYPE NUMERIC "0"
 -- Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_MIXED_PORTS NUMERIC "2"
 -- Retrieval info: PRIVATE: REGdata NUMERIC "1"
--- Retrieval info: PRIVATE: REGq NUMERIC "1"
+-- Retrieval info: PRIVATE: REGq NUMERIC "0"
 -- Retrieval info: PRIVATE: REGrdaddress NUMERIC "0"
 -- Retrieval info: PRIVATE: REGrren NUMERIC "0"
 -- Retrieval info: PRIVATE: REGwraddress NUMERIC "1"
@@ -176,31 +176,31 @@ END SYN;
 -- Retrieval info: CONSTANT: CLOCK_ENABLE_OUTPUT_A STRING "BYPASS"
 -- Retrieval info: CONSTANT: CLOCK_ENABLE_OUTPUT_B STRING "BYPASS"
 -- Retrieval info: CONSTANT: INDATA_REG_B STRING "CLOCK0"
--- Retrieval info: CONSTANT: INIT_FILE STRING "./matlab/sine_rom.hex"
+-- Retrieval info: CONSTANT: INIT_FILE STRING "sine_rom.hex"
 -- Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone IV E"
 -- Retrieval info: CONSTANT: LPM_TYPE STRING "altsyncram"
--- Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "16384"
--- Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "16384"
+-- Retrieval info: CONSTANT: NUMWORDS_A NUMERIC "4096"
+-- Retrieval info: CONSTANT: NUMWORDS_B NUMERIC "4096"
 -- Retrieval info: CONSTANT: OPERATION_MODE STRING "BIDIR_DUAL_PORT"
 -- Retrieval info: CONSTANT: OUTDATA_ACLR_A STRING "NONE"
 -- Retrieval info: CONSTANT: OUTDATA_ACLR_B STRING "NONE"
--- Retrieval info: CONSTANT: OUTDATA_REG_A STRING "CLOCK0"
--- Retrieval info: CONSTANT: OUTDATA_REG_B STRING "CLOCK0"
+-- Retrieval info: CONSTANT: OUTDATA_REG_A STRING "UNREGISTERED"
+-- Retrieval info: CONSTANT: OUTDATA_REG_B STRING "UNREGISTERED"
 -- Retrieval info: CONSTANT: POWER_UP_UNINITIALIZED STRING "FALSE"
--- Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "14"
--- Retrieval info: CONSTANT: WIDTHAD_B NUMERIC "14"
+-- Retrieval info: CONSTANT: WIDTHAD_A NUMERIC "12"
+-- Retrieval info: CONSTANT: WIDTHAD_B NUMERIC "12"
 -- Retrieval info: CONSTANT: WIDTH_A NUMERIC "16"
 -- Retrieval info: CONSTANT: WIDTH_B NUMERIC "16"
 -- Retrieval info: CONSTANT: WIDTH_BYTEENA_A NUMERIC "1"
 -- Retrieval info: CONSTANT: WIDTH_BYTEENA_B NUMERIC "1"
 -- Retrieval info: CONSTANT: WRCONTROL_WRADDRESS_REG_B STRING "CLOCK0"
--- Retrieval info: USED_PORT: address_a 0 0 14 0 INPUT NODEFVAL "address_a[13..0]"
--- Retrieval info: USED_PORT: address_b 0 0 14 0 INPUT NODEFVAL "address_b[13..0]"
+-- Retrieval info: USED_PORT: address_a 0 0 12 0 INPUT NODEFVAL "address_a[11..0]"
+-- Retrieval info: USED_PORT: address_b 0 0 12 0 INPUT NODEFVAL "address_b[11..0]"
 -- Retrieval info: USED_PORT: clock 0 0 0 0 INPUT VCC "clock"
 -- Retrieval info: USED_PORT: q_a 0 0 16 0 OUTPUT NODEFVAL "q_a[15..0]"
 -- Retrieval info: USED_PORT: q_b 0 0 16 0 OUTPUT NODEFVAL "q_b[15..0]"
--- Retrieval info: CONNECT: @address_a 0 0 14 0 address_a 0 0 14 0
--- Retrieval info: CONNECT: @address_b 0 0 14 0 address_b 0 0 14 0
+-- Retrieval info: CONNECT: @address_a 0 0 12 0 address_a 0 0 12 0
+-- Retrieval info: CONNECT: @address_b 0 0 12 0 address_b 0 0 12 0
 -- Retrieval info: CONNECT: @clock0 0 0 0 0 clock 0 0 0 0
 -- Retrieval info: CONNECT: @data_a 0 0 16 0 GND 0 0 16 0
 -- Retrieval info: CONNECT: @data_b 0 0 16 0 GND 0 0 16 0
@@ -212,5 +212,5 @@ END SYN;
 -- Retrieval info: GEN_FILE: TYPE_NORMAL sine_rom.inc FALSE
 -- Retrieval info: GEN_FILE: TYPE_NORMAL sine_rom.cmp TRUE
 -- Retrieval info: GEN_FILE: TYPE_NORMAL sine_rom.bsf FALSE
--- Retrieval info: GEN_FILE: TYPE_NORMAL sine_rom_inst.vhd TRUE
+-- Retrieval info: GEN_FILE: TYPE_NORMAL sine_rom_inst.vhd FALSE
 -- Retrieval info: LIB_FILE: altera_mf

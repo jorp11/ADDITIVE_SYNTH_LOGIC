@@ -49,25 +49,66 @@ R11
 !i113 1
 R12
 R13
-Eosc_tb
-Z14 w1570141624
+Eosc_bank
+Z14 w1571771638
 R1
 R2
 R3
 R4
-Z15 8C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/simulation/osc_tb.vhd
-Z16 FC:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/simulation/osc_tb.vhd
+Z15 8C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/osc_bank.vhdl
+Z16 FC:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/osc_bank.vhdl
+l0
+L7
+Vl5g7acimj29;?Ac0B[n>_2
+!s100 a7aSUIYZ?LUQ<I[UMlo5J0
+R7
+32
+Z17 !s110 1571771969
+!i10b 1
+Z18 !s108 1571771969.000000
+Z19 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/osc_bank.vhdl|
+Z20 !s107 C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/osc_bank.vhdl|
+!i113 1
+R12
+R13
+Abehavioral
+R1
+R2
+R3
+DEx4 work 8 osc_bank 0 22 l5g7acimj29;?Ac0B[n>_2
+l61
+L23
+V@nFWGSOO?Z]5M:7?mS]j^2
+!s100 CYBT2>elB59L>?M15Yonb3
+R7
+32
+R17
+!i10b 1
+R18
+R19
+R20
+!i113 1
+R12
+R13
+Eosc_tb
+Z21 w1571768307
+R1
+R2
+R3
+R4
+Z22 8C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/simulation/osc_tb.vhd
+Z23 FC:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/simulation/osc_tb.vhd
 l0
 L5
 VQ@<_zgNaPED8A6A9e@50H2
 !s100 >XjGo0F0j>WOF]5eW8XMz3
 R7
 32
-R8
+R17
 !i10b 1
-R9
-Z17 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/simulation/osc_tb.vhd|
-Z18 !s107 C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/simulation/osc_tb.vhd|
+R18
+Z24 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/simulation/osc_tb.vhd|
+Z25 !s107 C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/oscillator/simulation/osc_tb.vhd|
 !i113 1
 R12
 R13
@@ -76,39 +117,39 @@ R1
 R2
 R3
 DEx4 work 6 osc_tb 0 22 Q@<_zgNaPED8A6A9e@50H2
-l33
-L9
-VQ<5?c3_F7_N6E910cmI`B3
-!s100 e3k7Fc_GmfJn[T?@[?dAj1
+l39
+L8
+VIQMbLi=44C66_^X0B4a^V1
+!s100 8B[>OHfW^74`bJfnB6Cz71
 R7
 32
-R8
-!i10b 1
-R9
 R17
+!i10b 1
 R18
+R24
+R25
 !i113 1
 R12
 R13
 Ephase_acc
-Z19 w1570044419
+Z26 w1571762525
 R1
 R2
 R3
 R4
-Z20 8C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/phase_acc.vhd
-Z21 FC:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/phase_acc.vhd
+Z27 8C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/phase_acc.vhd
+Z28 FC:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/phase_acc.vhd
 l0
 L7
-VKX?ZW9ojh[SVKM?gR@1S30
-!s100 J18MDEY6XN5ae;n7Y@ZgF0
+Vd][;AZMOa`a`PTFDcjXDM2
+!s100 50[`KNYK5m:F<=mN9B>bj2
 R7
 32
-R8
+R17
 !i10b 1
-R9
-Z22 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/phase_acc.vhd|
-Z23 !s107 C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/phase_acc.vhd|
+R18
+Z29 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/phase_acc.vhd|
+Z30 !s107 C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/phase_acc.vhd|
 !i113 1
 R12
 R13
@@ -116,29 +157,29 @@ Abehavioral
 R1
 R2
 R3
-DEx4 work 9 phase_acc 0 22 KX?ZW9ojh[SVKM?gR@1S30
+DEx4 work 9 phase_acc 0 22 d][;AZMOa`a`PTFDcjXDM2
 l20
 L17
-VPN0>ODL1I5EA6`f;O0RFX0
-!s100 J9EWRmS<9l`5Dd3ocTcQa2
+VE__b[T8jJHD@fhio36T<f0
+!s100 Fo9VZPNoj:]E_K50dbTJ?2
 R7
 32
-R8
+R17
 !i10b 1
-R9
-R22
-R23
+R18
+R29
+R30
 !i113 1
 R12
 R13
 Ephase_acc_tb
-Z24 w1570141452
+Z31 w1570141452
 R1
 R2
 R3
 R4
-Z25 8C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/tb/phase_acc_tb.vhd
-Z26 FC:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/tb/phase_acc_tb.vhd
+Z32 8C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/tb/phase_acc_tb.vhd
+Z33 FC:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/tb/phase_acc_tb.vhd
 l0
 L5
 Vd<l`GJkHV;2OjF;9B=;iX1
@@ -148,8 +189,8 @@ R7
 R8
 !i10b 1
 R9
-Z27 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/tb/phase_acc_tb.vhd|
-Z28 !s107 C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/tb/phase_acc_tb.vhd|
+Z34 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/tb/phase_acc_tb.vhd|
+Z35 !s107 C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/phase_accumulator/tb/phase_acc_tb.vhd|
 !i113 1
 R12
 R13
@@ -157,18 +198,59 @@ Abehaviour
 R1
 R2
 R3
-Z29 DEx4 work 12 phase_acc_tb 0 22 d<l`GJkHV;2OjF;9B=;iX1
+DEx4 work 12 phase_acc_tb 0 22 d<l`GJkHV;2OjF;9B=;iX1
 l30
 L9
-Z30 V<?zL`FZ<;^Z4zSon;DN:j1
-Z31 !s100 g>E0nPAG0@^C<V]8AGJYn2
+V<?zL`FZ<;^Z4zSon;DN:j1
+!s100 g>E0nPAG0@^C<V]8AGJYn2
 R7
 32
 R8
 !i10b 1
 R9
-R27
-R28
+R34
+R35
+!i113 1
+R12
+R13
+Esine_rom
+Z36 w1571771931
+Z37 DPx9 altera_mf 20 altera_mf_components 0 22 7RjT1Xb9^`L[coRHZN<9k2
+R2
+R3
+R4
+Z38 8C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/sine_rom.vhd
+Z39 FC:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/sine_rom.vhd
+l0
+L42
+V^WCF?A9Sg3OPn_mi>WKPB1
+!s100 fU_SRiDjDhF>?S;J609Kb2
+R7
+32
+R17
+!i10b 1
+R18
+Z40 !s90 -reportprogress|300|-work|work|-2002|-explicit|-stats=none|C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/sine_rom.vhd|
+Z41 !s107 C:/Users/micro/Documents/MUMT609/git/ADDITIVE_SYNTH_LOGIC/sine_rom.vhd|
+!i113 1
+R12
+R13
+Asyn
+R37
+R2
+R3
+Z42 DEx4 work 8 sine_rom 0 22 ^WCF?A9Sg3OPn_mi>WKPB1
+l62
+L54
+Z43 VEAm]F_5dRB0QD3hVS9mNm0
+Z44 !s100 k4@@iPT[Tg]5@T9k3PMdT1
+R7
+32
+R17
+!i10b 1
+R18
+R40
+R41
 !i113 1
 R12
 R13

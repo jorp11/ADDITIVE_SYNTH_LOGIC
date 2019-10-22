@@ -9,29 +9,30 @@ architecture behaviour of osc_tb is
 
 	constant NUM_OSC : integer :=1;
 	constant PA_WIDTH :integer := 32;
-	constant ROM_DATA_WIDTH :integer := 18;
+	constant ROM_DATA_WIDTH :integer := 16;
 	constant ROM_ADDR_WIDTH :integer := 14;
 
 	component osc_bank is 
 	generic (NUM_OSC : integer := 4;
 			PA_WIDTH : integer := 32;   
-			ROM_DATA_WIDTH : integer := 18;  
+			ROM_DATA_WIDTH : integer := 16;  
 			ROM_ADDR_WIDTH : integer := 14); 
 	port (clk_i : in std_logic;
 		rst_i    : in  std_logic;
-		freq_i   : in  std_logic_vector (PA_WIDTH-1 downto 0);
+		freq_i   : in  unsigned (PA_WIDTH-1 downto 0);
 		osc_en_i : in std_logic_vector (NUM_OSC -1 downto 0); -- ONE hot enable for oscillator bank.
 		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
-		amp_i	 : in std_logic_vector (ROM_DATA_WIDTH-1 downto 0);
+		amp_i	 : in unsigned (ROM_DATA_WIDTH-1 downto 0);
 		--osc_ind_o : out integer;
-		phase_o    : out std_logic_vector (ROM_DATA_WIDTH-1 downto 0)
+		sin_o    : out signed (ROM_DATA_WIDTH-1 downto 0)
 	);
 	end component;
 
-	signal enable, rst,clk : std_logic := '0';
+	signal rst,clk : std_logic := '0';
+	signal enable : std_logic_vector (num_osc-1 downto 0);
 	signal freq: unsigned (PA_WIDTH-1 downto 0);
 	signal amp :unsigned(ROM_DATA_WIDTH-1 downto 0);
-	signal sin_o : std_logic_vector(ROM_DATA_WIDTH-1 downto 0); -- TODO make signed
+	signal sin_o : signed(ROM_DATA_WIDTH-1 downto 0); 
 	constant clock_period : time := 20 ns;
 
 	-------------------------------------------
@@ -46,7 +47,7 @@ architecture behaviour of osc_tb is
 			freq_i => freq,
 			osc_en_i => enable,
 			amp_i => amp,
-			phase_o  => sin_o
+			sin_o  => sin_o
 			);
 	clock_process :process
 	begin
@@ -59,12 +60,14 @@ architecture behaviour of osc_tb is
 	simulation_process : process
         begin
             rst <= '1';
+			enable <=(others=>'0') ;
+
 				freq <= (others => '0');
 				amp   <= x"FFFF";
             wait for 1000 ns;        
             wait until clk = '0' and clk'event;
-				freq <= to_unsigned(100,PA_WIDTH);
-				enable <= '1';
+				freq <= to_unsigned(80000000,PA_WIDTH);
+				enable <=(0=>'1', others=>'0') ;
     	    	rst <= '0';
 	    wait for 50000 ns;
             assert false
