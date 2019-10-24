@@ -3,7 +3,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-
+use ieee.math_real.log2;
+use ieee.math_real.ceil;
 entity osc_bank is
 	generic (NUM_OSC : integer := 4;
 			PA_WIDTH : integer := 32;   
@@ -13,6 +14,7 @@ entity osc_bank is
 		rst_i    : in  std_logic;
 		freq_i   : in  unsigned (PA_WIDTH-1 downto 0);
 		osc_en_i : in std_logic_vector (NUM_OSC -1 downto 0); -- ONE hot enable for oscillator bank.
+		samp_start_i : in std_logic;
 		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
 		amp_i	 : in unsigned (ROM_DATA_WIDTH-1 downto 0);
 		--osc_ind_o : out integer;
@@ -21,6 +23,7 @@ entity osc_bank is
 end osc_bank;
 
 architecture behavioral of osc_bank is
+	constant OSC_BITS : integer := integer(ceil(log2(real(num_osc))));
 	type enable_array_t is array (0 to num_osc-1) of std_logic;
 	--type freq_array_t is array (0 to num_osc-1) of std_logic_vector(ROM_ADDR_WIDTH-1 downto 0);
 	type phase_array_t is array (0 to num_osc-1) of unsigned(PA_WIDTH-1 downto 0);
@@ -35,7 +38,6 @@ architecture behavioral of osc_bank is
 		);
 	end component;
 
-
 	component sine_rom is
 --		generic(DATA_WIDTH : integer := ROM_DATA_WIDTH;
 --				ADDR_WIDTH : integer := ROM_ADDR_WIDTH
@@ -48,15 +50,16 @@ architecture behavioral of osc_bank is
 	 		q_b : out std_logic_vector(ROM_DATA_WIDTH-1 downto 0)
 	 		);
 		end component;
-		
+	
 	signal phase_array    : phase_array_t;
---	signal freq_array   : freq_array_t;
-	--signal enable_array : enable_array_t;
 	signal phase_acc_o        : std_logic_vector(PA_WIDTH-1 downto 0);
 	signal sin_out 		  : signed(ROM_DATA_WIDTH-1 downto 0);--std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
 	signal rom_addr,rom_addr_n1,rom_addr_n2           : std_logic_vector(ROM_ADDR_WIDTH-1-2 downto 0); -- take off two bits for quarter table!
 	signal roma_out, romb_out,roma_out_n1 : std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
 	signal negate             : std_logic_vector(1 downto 0); -- used to negate rom address
+	signal osc_en_n1,osc_en_n2 : std_logic_vector(NUM_OSC-1 downto 0);
+	signal sample_acc : signed(OSC_BITS + ROM_DATA_WIDTH +1 -1 downto 0); -- ROM data plus sign ext plus 1 bit every log2 osc
+	signal sample_valid : std_logic := '1';
                                                               --------------------------------
 begin
 	gen_osc : for i in 0 to NUM_OSC-1 generate
@@ -70,8 +73,19 @@ begin
 		);
 		end generate;
 
-	--phase_acc_o <= std_logic_vector(phase_array(0)(31 downto 18);
-	phase_acc_o <=std_logic_vector(phase_array(0));
+	process (clk_i)
+		begin
+		if rising_edge(clk_i) then
+		    if rst_i ='1' then
+		        phase_acc_o <= (others => '0');
+		    elsif osc_en_i(0) = '1' then
+			phase_acc_o <=std_logic_vector(phase_array(0));
+		    elsif osc_en_i(1) = '1' then
+			phase_acc_o <=std_logic_vector(phase_array(1));
+		    end if;
+		end if;
+	end process;	
+--Deal with quarter table phase manip. 
 rom_addr_map : process (clk_i)
 	begin
 		if rising_edge(clk_i) then
@@ -82,17 +96,22 @@ rom_addr_map : process (clk_i)
 				rom_addr_n1 <=(others => '0');
 				roma_out_n1 <= (others => '0');
 				rom_addr_n2 <= (others => '0');
+				osc_en_n1 <= (others => '0');
+				osc_en_n2 <= (others => '0');
 			else
 				roma_out_n1 <= roma_out; -- TODO deal with this
-rom_addr_n2 <= rom_addr_n1;
-rom_addr_n1 <= rom_Addr;
+				rom_addr_n2 <= rom_addr_n1;
+				rom_addr_n1 <= rom_Addr;
 				negate(0)  <= phase_acc_o(PA_WIDTH-1);
-				if (phase_acc_o(PA_WIDTH-2) ='1') then
-					rom_addr <= not (phase_acc_o (PA_WIDTH-3 downto (PA_WIDTH-ROM_ADDR_WIDTH)));
-				else
-					rom_addr <=  phase_acc_o (PA_WIDTH-3 downto (PA_WIDTH-ROM_ADDR_WIDTH));
-				end if;
 				negate(1) <= negate(0);
+				osc_en_n1 <= osc_en_i;
+				osc_en_n2 <= osc_en_n1;
+				if (phase_acc_o(PA_WIDTH-2) ='1') then
+				    rom_addr <= not (phase_acc_o (PA_WIDTH-3 downto (PA_WIDTH-ROM_ADDR_WIDTH)));
+				else
+				    rom_addr <=  phase_acc_o (PA_WIDTH-3 downto (PA_WIDTH-ROM_ADDR_WIDTH));
+				end if;
+
 				if (negate(1)= '1')then
 					--sin_out <= signed(1 & std_logic_vector(roma_out_n1)
 					--sin_out <= (1 & roma_out_n1(ROM_DATA_WIDTH-1dow)) + 1;-- signed(roma_out);
@@ -104,6 +123,17 @@ rom_addr_n1 <= rom_Addr;
 		end if;
 	end process;
 	
+--		process (clk_i)
+--		begin
+--		if rising_edge(clk_i) then
+--			if rst_i = '1' then
+--
+--			else
+--
+--			end if;
+--		end if;
+--		end process;
+
 sine_rom_inst : sine_rom PORT MAP (
 		address_a	 => rom_addr,
 		address_b	 => (others => '0'),
@@ -111,6 +141,22 @@ sine_rom_inst : sine_rom PORT MAP (
 		q_a	 => roma_out,
 		q_b	 => romb_out
 	);
-sin_o <= sin_out;
+
+	sin_o <= sin_out;
+
+	process (clk_i)
+	begin
+	if rising_edge(clk_i) then
+	    if rst_i = '1' then
+		sample_acc <= (others => '0');
+	    elsif samp_start_i = '1' then
+		sample_acc <= (others => '0');
+	    else
+		if sample_valid = '1' then
+		sample_acc <= sample_acc + sin_out;
+		end if;
+	    end if;
+	end if;	
+	end process;
 end behavioral;
 	
