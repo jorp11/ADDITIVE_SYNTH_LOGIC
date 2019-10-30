@@ -67,3 +67,5 @@ reset_sync/.DS_Store
 i2s/.DS_Store
 additive_synth_top_level/.DS_Store
 
+*.cnx
+*.txt
