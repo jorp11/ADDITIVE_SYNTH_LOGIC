@@ -10,7 +10,7 @@ end osc_ctrl_tb;
 
 architecture behaviour of osc_ctrl_tb is
 	constant clock_period : time := 10 ns; -- assume 100Mhz clock
-	constant NUM_OSC : integer := 32;
+	constant NUM_OSC : integer :=64;
 	constant PA_WIDTH :integer := 32;
 	constant ROM_DATA_WIDTH :integer := 16;
 	constant ROM_ADDR_WIDTH :integer := 14;
@@ -28,24 +28,41 @@ component osc_ctrl is
 		num_osc_i   : in integer range 0 to 512; -- todo 512 as constant MAX osc number
 		freq_i		: in unsigned(PA_WIDTH-1 downto 0);
 		stretch_i 	:in integer range 0 to 1023;
-		slope_i		:in integer range 0 to 1023;
+		slope_i		:in unsigned(AMP_WIDTH-2 downto 0);
 		osc_freq_o   : out  unsigned (PA_WIDTH-1 downto 0); -- phase_acc keyword 
 		osc_en_o : out std_logic_vector (NUM_OSC -1 downto 0); -- ONE hot enable for oscillator bank.
 		--phase_offset_o  : out std_logic_vector (PA_WIDTH-2 downto 0);
 		amp_o	 : out unsigned (AMP_WIDTH-1 downto 0)
 	);
 end component;
-
-
+	component osc_bank is 
+	generic (NUM_OSC : integer := 4;
+			PA_WIDTH : integer := 32;   
+			ROM_DATA_WIDTH : integer := 16;  
+			ROM_ADDR_WIDTH : integer := 14;
+			AMP_WIDTH : integer :=18); 
+	port (clk_i : in std_logic;
+		rst_i    : in  std_logic;
+		freq_i   : in  unsigned (PA_WIDTH-1 downto 0);
+		osc_en_i : in std_logic_vector (NUM_OSC -1 downto 0); -- ONE hot enable for oscillator bank.
+		samp_start_i : in std_logic;
+		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
+		amp_i	 : in unsigned (AMP_WIDTH-1 downto 0);
+		--osc_ind_o : out integer;
+		sum_o    : out signed (ROM_DATA_WIDTH-1 downto 0)
+	);
+	end component;
+	
 	signal rst,clk : std_logic := '0';
 	signal samp_start : std_logic :='0';
 	signal freq: unsigned (PA_WIDTH-1 downto 0);
 	signal amp :unsigned(AMP_WIDTH-1 downto 0);
 	signal stretch : integer range 0 to 1023 := 0;
- 	signal slope : integer range 0 to 1023 := 0;
+ 	signal slope : unsigned(AMP_WIDTH-2 downto 0) := (others=>'0');
 	
 	signal osc_en : std_logic_vector (NUM_OSC -1 downto 0);
 	signal osc_freq : unsigned (PA_WIDTH-1 downto 0);
+	signal sum_out : signed (23 downto 0);
 	-------
 	begin 
 	DUT: osc_ctrl
@@ -65,7 +82,20 @@ end component;
 			osc_en_o => osc_en,
 			amp_o => amp
 			);
-
+osc_bank_inst: osc_bank
+	generic map(NUM_OSC => NUM_OSC,
+			PA_WIDTH => PA_WIDTH,-- TODO REPLACE W CONST
+			ROM_DATA_WIDTH => ROM_DATA_WIDTH,-- TODO REPLACE W CONST
+			ROM_ADDR_WIDTH => ROM_ADDR_WIDTH,-- TODO REPLACE W CONST);
+			AMP_WIDTH =>AMP_WIDTH)
+	port map (clk_i => clk,
+			rst_i => rst,
+			freq_i => osc_freq,
+			osc_en_i => osc_en,
+			samp_start_i => samp_start,
+			amp_i => amp,
+			sum_o  => sum_out
+			);
 	clock_process :process
 	begin
 	clk <= '0';
@@ -78,30 +108,16 @@ end component;
 	
 	freq_process : process
 	begin
---		
-	    freq <= to_unsigned(262144*16,PA_WIDTH);
-	    amp <= (others => '0');
-	    stretch <= 0;
-	    slope <= 0;
+	    wait until rst = '0';
+	    	freq <= to_unsigned(0,PA_WIDTH);
+	  
+	    	stretch <= 0;
+	    	slope <= to_unsigned(1000,slope'left+1);
+
 --	    enable <= (others => '0');
       	    wait until clk = '1' and samp_start = '1';
---                wait until clk = '1' and clk'event;
---	    freq <= to_unsigned(262144*16,PA_WIDTH);
---	    amp   <= x"FFFF";
---	    enable <= (0 => '1', others => '0');
---            wait until clk = '1' and clk'event;
---	    for i in 2 to num_osc loop
---		freq <= to_unsigned(262144*16*i,PA_WIDTH);
---  		--freq <= to_unsigned(262144*32,PA_WIDTH);
---	    	if (integer(i) mod 2)= 0 then
---		    amp <= (others =>'0');
---		else
---		    amp <= to_unsigned(65535/i,AMP_WIDTH);
---		end if;
---		--amp <= x"ff";
---		-- Leftshift enable w/ wrap around
---		enable <= enable(num_osc-2 downto 0) & enable(num_osc-1); 
---                wait until clk = '1' and clk'event;
+ 	    freq <= to_unsigned(262144*16,PA_WIDTH);
+	    wait until clk = '1' and samp_start = '1';
 
 	end process;
 	simulation_process : process
@@ -109,25 +125,25 @@ end component;
             rst <= '1';
             wait for 100 ns;   
     	    rst <= '0';
-            wait for 10000 ns;   
-    	    rst <= '1';
-            wait for 4000 ns; 
-    	    rst <= '0';
-	    wait for 1000000 ns;
+            --wait for 10000 ns;   
+    	    --rst <= '1';
+     --       wait for 4000 ns; 
+    --	    rst <= '0';
+	    wait for 200000 ns;
             assert false
     	report "simulation over"
 	severity failure;
         end process;
 
 	samp_process :process (clk)
-variable count :integer range 0 to 64 :=0;
-begin
-if rising_edge(clk) then
-	if rst = '1' then
-	    count := 0;
-	    samp_start <= '0';
+	variable count :integer range 0 to NUM_OSC+4 :=0;
+	begin
+	if rising_edge(clk) then
+	    if rst = '1' then
+	        count := 0;
+	        samp_start <= '0';
 	
-	else
+	    else
 		if count = num_osc+4 then	
     	    	    samp_start <= '1';
 		    count :=0;
@@ -136,8 +152,10 @@ if rising_edge(clk) then
     		    count := count + 1;
 		    samp_start <= '0';
 		end if;
-end if;
+	    end if;
 		
-end if;
-end process;	
+	end if;
+	end process;	
+
+	
 end architecture behaviour;

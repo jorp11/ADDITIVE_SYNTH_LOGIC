@@ -19,7 +19,7 @@ entity osc_bank is
 		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
 		amp_i	 : in unsigned (AMP_WIDTH-1 downto 0);
 		--osc_ind_o : out integer;
-		sin_o    : out signed (ROM_DATA_WIDTH-1 downto 0)
+		sum_o    : out signed (23 downto 0)
 	);
 end osc_bank;
 
@@ -60,7 +60,7 @@ architecture behavioral of osc_bank is
 	signal negate             : std_logic_vector(1 downto 0); -- used to negate rom address
 	signal osc_en_n1,osc_en_n2 : std_logic_vector(NUM_OSC-1 downto 0);
 	signal sample_acc : signed(OSC_BITS + ROM_DATA_WIDTH + 1 + AMP_WIDTH +1 -1 downto 0); -- ROM data plus sign ext plus 1 bit every log2 osc
-	signal sum_out : signed(23 downto 0); -- TODO add  CONSTANT DAC_BITS
+	signal sample_sum : signed(23 downto 0); -- TODO add  CONSTANT DAC_BITS
         signal rom_d_val,rom_d_val_n1,rom_d_val_n2,rom_d_val_n3 : std_logic :='0';  
 signal amp_delay_r : amp_reg_t;        
 signal scaled_sine : signed (35 downto 0);--(ROM_DATA_WIDTH+AMP_WIDTH downto 0);                                          --------------------------------
@@ -159,7 +159,6 @@ sine_rom_inst : sine_rom PORT MAP (
 		q_b	 => romb_out
 	);
 
-	sin_o <= sin_out;
 
 	process (clk_i)
 	begin
@@ -183,11 +182,13 @@ sine_rom_inst : sine_rom PORT MAP (
 	begin
 	if rising_edge(clk_i) then
 		if rst_i = '1' then
-			sum_out <= (others =>'0');
+			sample_sum <= (others =>'0');
 		elsif samp_start_i = '1' then
-			sum_out <= sample_acc(sample_acc'left downto sample_acc'left - 23);
+			sample_sum <= sample_acc(sample_acc'left downto sample_acc'left - 23);
 		end if;
 	end if;
 	end process;
+
+	sum_o <= sample_sum;
 end behavioral;
 	
