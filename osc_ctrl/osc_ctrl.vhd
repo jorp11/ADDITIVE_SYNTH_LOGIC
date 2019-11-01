@@ -26,7 +26,8 @@ end osc_ctrl;
 
 architecture behavioral of osc_ctrl is
 constant MAX_FREQ : unsigned (PA_WIDTH-1 downto 0) := to_unsigned(2**(PA_WIDTH-1),PA_WIDTH);--(PA_WIDTH-1 => '1', others =>'0');
-constant LFO_RATE : integer range 1 to 2**AMP_WIDTH-1 := 1024 ;
+constant LFO_RATE : integer range 1 to 2**AMP_WIDTH-1 := 2**(AMP_WIDTH-5);
+constant LFO_WIDTH : integer := AMP_WIDTH -3;
 --RAM
 -- OSC BANK
 	signal osc_freq,osc_freq_n   : unsigned(PA_WIDTH-1 downto 0);--integer range 0 to 2**(PA_WIDTH-1)-1;-- std_logic_vector(PA_WIDTH-1 downto 0); 
@@ -42,7 +43,7 @@ constant LFO_RATE : integer range 1 to 2**AMP_WIDTH-1 := 1024 ;
 	signal samp_start: std_logic;
 	signal sample_count : integer :=0;
 	------------------------------------
-	signal lfo : integer range 0 to (2**(AMP_WIDTH-2) -1) := 0 ;
+	signal lfo,lfo_saw,lfo_tri : integer range 0 to (2**(AMP_WIDTH-2) -1) := 0 ;
 begin
 	--sample input freq once per sample - could make this slower
 	main: process (clk_i)
@@ -69,10 +70,10 @@ begin
 			    slope <= slope_i;
 			    osc_en <= std_logic_vector(to_unsigned(1,NUM_OSC));
 			    amp <= to_unsigned(2**(AMP_WIDTH-1),AMP_WIDTH);
-			    amp_n <= to_unsigned(2**(AMP_WIDTH-1),AMP_WIDTH) - (('0' & slope_i)+ lfo);
+			    amp_n <= to_unsigned(2**(AMP_WIDTH-1),AMP_WIDTH) - ('0' & slope_i));
 			else
-			    if amp_n > (('0' & slope_i)) then
-			    	amp_n <= amp_n - ('0' & slope_i);
+			    if amp_n > (('0' & slope_i)-lfo) then
+			    	amp_n <= amp_n - ('0' & slope_i)+lfo;
 			    else
 				amp_n <= (others=>'0');
 			    end if;
@@ -80,7 +81,7 @@ begin
 			    if (osc_freq_n > MAX_FREQ) or count = NUM_OSC then
 				amp <= (others=>'0'); 
 			    else
-				amp <=amp_n - lfo;
+				amp <=amp_n;
 			    end if;
 			osc_freq <= osc_freq_n;	
 			osc_en <= osc_en(NUM_OSC-2 downto 0) & '0';
@@ -102,16 +103,38 @@ begin
 	begin
 	if rising_edge(clk_i) then
 		if rst_i = '1' then
-		lfo <= 0;
+		lfo_tri <= 0;
 		else
 			if samp_start_i = '1' then
-				lfo <=LFO_RATE;
+			    lfo_tri <=LFO_RATE;
 			else
-			lfo <= (lfo +LFO_RATE) mod 2**(amp_width-3); 
-
+			    if lfo_saw < 2**(LFO_WIDTH-1) then
+				lfo_tri<= lfo_saw;
+			    else
+				lfo_tri <=2**(LFO_WIDTH) - lfo_saw;
+			    end if;
 			end if;	
 		end if;
 	end if;
 	end process;
 
+	process (clk_i)
+	begin
+	if rising_edge(clk_i) then
+		if rst_i = '1' then
+		lfo_saw <= 0;
+		else
+			if samp_start_i = '1' then
+			    lfo_saw <=LFO_RATE;
+			else
+			    lfo_saw <= (lfo_saw +LFO_RATE) mod 2**(LFO_WIDTH); 
+				
+			end if;	
+		end if;
+	end if;
+	end process;
+
+
+
+	lfo<=lfo_saw;
 end behavioral;
