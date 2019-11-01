@@ -10,7 +10,7 @@ end osc_ctrl_tb;
 
 architecture behaviour of osc_ctrl_tb is
 	constant clock_period : time := 10 ns; -- assume 100Mhz clock
-	constant NUM_OSC : integer :=64;
+	constant NUM_OSC : integer :=128;
 	constant PA_WIDTH :integer := 32;
 	constant ROM_DATA_WIDTH :integer := 16;
 	constant ROM_ADDR_WIDTH :integer := 14;
@@ -28,7 +28,9 @@ component osc_ctrl is
 		num_osc_i   : in integer range 0 to 512; -- todo 512 as constant MAX osc number
 		freq_i		: in unsigned(PA_WIDTH-1 downto 0);
 		stretch_i 	:in integer range 0 to 1023;
-		slope_i		:in unsigned(AMP_WIDTH-2 downto 0);
+		slope_i		:in signed(AMP_WIDTH-1 downto 0);
+		even_gain_i 	: in unsigned(AMP_WIDTH-1 downto 0);
+		odd_gain_i	: in unsigned(AMP_WIDTH-1 downto 0);
 		osc_freq_o   : out  unsigned (PA_WIDTH-1 downto 0); -- phase_acc keyword 
 		osc_en_o : out std_logic_vector (NUM_OSC -1 downto 0); -- ONE hot enable for oscillator bank.
 		--phase_offset_o  : out std_logic_vector (PA_WIDTH-2 downto 0);
@@ -58,11 +60,12 @@ end component;
 	signal freq: unsigned (PA_WIDTH-1 downto 0);
 	signal amp :unsigned(AMP_WIDTH-1 downto 0);
 	signal stretch : integer range 0 to 1023 := 0;
- 	signal slope : unsigned(AMP_WIDTH-2 downto 0) := (others=>'0');
+ 	signal slope : signed(AMP_WIDTH-1 downto 0) := (others=>'0');
 	
 	signal osc_en : std_logic_vector (NUM_OSC -1 downto 0);
 	signal osc_freq : unsigned (PA_WIDTH-1 downto 0);
 	signal sum_out : signed (23 downto 0);
+	signal even_gain, odd_gain : unsigned(AMP_WIDTH-1 downto 0);
 	-------
 	begin 
 	DUT: osc_ctrl
@@ -78,6 +81,8 @@ end component;
 			freq_i => freq,
 			stretch_i => stretch,
 			slope_i => slope,
+even_gain_i => even_gain,
+odd_gain_i  => odd_gain,
 			osc_freq_o=> osc_freq,
 			osc_en_o => osc_en,
 			amp_o => amp
@@ -110,15 +115,19 @@ osc_bank_inst: osc_bank
 	begin
 	    wait until rst = '0';
 	    	freq <= to_unsigned(0,PA_WIDTH);
-	  
+	  	even_gain <= to_unsigned(2**AMP_WIDTH-1,AMP_WIDTH);
+		odd_gain <= to_unsigned(0,AMP_WIDTH);
 	    	stretch <= 0;
-	    	slope <= to_unsigned(1000,slope'left+1);
+	    	slope <= to_signed(-1000,slope'left+1);
 
 --	    enable <= (others => '0');
       	    wait until clk = '1' and samp_start = '1';
- 	    freq <= to_unsigned(262144*16,PA_WIDTH);
-	    wait until clk = '1' and samp_start = '1';
-
+ 	        freq <= to_unsigned(262144*8,PA_WIDTH);
+--	    for i in 1 to 20 loop
+-- 		slope <= to_signed(-1000+100*i,slope'left+1);
+--	        wait until clk = '1' and clk'event and samp_start = '1';
+--    	    end loop;
+		
 	end process;
 	simulation_process : process
         begin
@@ -129,7 +138,7 @@ osc_bank_inst: osc_bank
     	    --rst <= '1';
      --       wait for 4000 ns; 
     --	    rst <= '0';
-	    wait for 200000 ns;
+	    wait for 2 ms;
             assert false
     	report "simulation over"
 	severity failure;
