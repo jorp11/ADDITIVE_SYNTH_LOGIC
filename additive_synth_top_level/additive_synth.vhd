@@ -1,8 +1,11 @@
-
 library  ieee;
 use  ieee.std_logic_1164.all;
-use ieee.std_logic_unsigned.all;
-
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+USE ieee.math_real.log2;
+USE ieee.math_real.ceil;
+library work;
+use work.constants_pkg.all; -- TODO rename this
 
 entity additive_synth is 
 	port (clk_i: in std_logic; -- 50 MHZ clock in
@@ -17,85 +20,6 @@ entity additive_synth is
 end additive_synth;
 
 architecture behavioral of additive_synth is
-
- --- CONSTANTS 
- constant PA_WIDTH : integer := 32;
- constant ROM_ADDR_WIDTH : integer :=14;
-
- constant ROM_DATA_WIDTH : integer :=18;
- constant OUT_BIT_DEPTH : integer := 24;
----------- COMPONENT INSTANTIATION ------------
----MOVE THESE TO PACKAGE?
-	component pll
-	port (
-	areset: in std_logic;
-	inclk0 : in std_logic;
-	c0 : out std_logic;
-	locked: out std_logic
-	);
-	end component;
-		
-	component reset_sync is 
-		port (clk_i: in std_logic;
-				async_rst_i: in std_logic;
-				sync_rst_o : out std_logic
-			);
-	end component;
-	
-	component osc is 
-	generic (PA_WIDTH : integer;
-			ROM_DATA_WIDTH : integer;  -- TODO REPLACE W CONST
-		ROM_ADDR_WIDTH : integer);
-	port (clk_i: in std_logic;
-			rst_i: in std_logic;
-			freq_i : in std_logic_vector (PA_WIDTH-1 downto 0);
-			enable_i : in std_logic;
-			sin_o : out std_logic_vector (ROM_DATA_WIDTH-1 downto 0)
-			);
-	end component;
-
-component i2s_tx is
-    generic (BITDEPTH :    integer );
-    port (clk_i       : in std_logic;
-        rst_i       : in  std_logic;
-        bclk_i      : in  std_logic; -- Bit clock
-        lr_ws_i     : in  std_logic; -- Word select /LR clk
-        sampstart_i : in  std_logic;
-        audio_l_i   : in  std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
-        audio_r_i   : in  std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
-        tx_o        : out std_logic);
-end component;
-	
-	 component audio_clk is
-    generic (MCLK_DIVRATIO : integer;  -- 98.3MHZ/8 = 12.28 MHz Mclk (48Khz*256)
-        LRCLK_DIVRATIO   : integer; -- 98.3Mhz/2048 = 48khz
-        BITCLK_DIVRATIO : integer);  -- 98.3 MHz/32 = 3.072Mhz
-    port (clk_i : in std_logic;
-        rst_i        : in  std_logic;
-        mclk_o       : out std_logic;
-        bclk_o       : out std_logic;
-        lrclk_o      : out std_logic;
-        codec_nrst_o  : out std_logic;
-        samp_start_o : out std_logic
-    );
-	end component;
-	----------------------
-	component osc_bank is
-	generic (NUM_OSC : integer := 4;
-			PA_WIDTH : integer := 32;   
-			ROM_DATA_WIDTH : integer := 18;  
-			ROM_ADDR_WIDTH : integer := 14); 
-	port (clk_i : in std_logic;
-		rst_i    : in  std_logic;
-		freq_i   : in  std_logic_vector (PA_WIDTH-1 downto 0);
-		osc_en_i : in std_logic_vector (NUM_OSC -1 downto 0); -- ONE hot enable for oscillator bank.
-		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
-		amp_i	 : in std_logic_vector (ROM_DATA_WIDTH-1 downto 0);
-		--osc_ind_o : out integer;
-		phase_o    : out std_logic_vector (ROM_DATA_WIDTH-1 downto 0)
-	);
-end component;
-	
 ----- SIGNALS --------
 	signal clk_98: std_logic;
 	signal rst: std_logic;
@@ -105,6 +29,17 @@ end component;
 	signal mclk, bclk,lr_ws, samp_start : std_logic;
 	signal audio_l, audio_r : std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
 	signal codec_nrst : std_logic;
+
+	signal freq: unsigned (PA_WIDTH-1 downto 0);
+	signal amp :unsigned(AMP_WIDTH-1 downto 0);
+	signal stretch : integer range 0 to 1023 := 0;
+ 	signal slope : signed(AMP_WIDTH-2 downto 0) := (others=>'0');
+	
+	signal osc_en : std_logic_vector (NUM_OSC -1 downto 0);
+	signal osc_freq : unsigned (PA_WIDTH-1 downto 0);
+	signal sum_out : signed (23 downto 0);
+	signal even_gain, odd_gain : unsigned(AMP_WIDTH-1 downto 0);
+	signal lfo_rate : unsigned( AMP_WIDTH-1 downto 0);
 	--------------------------------
 	begin
 	--- INSTANTIATIONS
@@ -121,18 +56,7 @@ end component;
 			locked => pll_lock
 			);
 	--------------------------------	
---		osc1 : osc 
---		GENERIC MAP(PA_WIDTH => PA_WIDTH,
---						ROM_DATA_WIDTH =>ROM_DATA_WIDTH,  
---						ROM_ADDR_WIDTH => ROM_ADDR_WIDTH)
---		PORT MAP (clk_i=>clk_98,
---			rst_i => rst,
---			freq_i => x"00000001",
---			enable_i => '1',
---			sin_o => osc_out
---			);
 
-			--------------------------------
 		audio_clock : audio_clk
 		generic map(MCLK_DIVRATIO => 8,  -- 98.3MHZ/8 = 12.28 MHz Mclk (48Khz*256)
 			  LRCLK_DIVRATIO    => 2048, -- 98.3Mhz/2048 = 48khz
@@ -162,6 +86,45 @@ end component;
 		  
 		  audio_r <=  (others =>'0');
 		  audio_l <=  (others =>'1');
+		  
+		  
+		  DUT: osc_ctrl
+	generic map(NUM_OSC => NUM_OSC,
+			PA_WIDTH => PA_WIDTH,-- TODO REPLACE W CONST
+			ROM_DATA_WIDTH => ROM_DATA_WIDTH,-- TODO REPLACE W CONST
+			ROM_ADDR_WIDTH => ROM_ADDR_WIDTH,-- TODO REPLACE W CONST);
+			AMP_WIDTH =>AMP_WIDTH)
+	port map (clk_i => clk_98,
+			rst_i => rst,
+			samp_start_i => samp_start,
+			num_osc_i => num_osc,
+			freq_i => freq,
+			stretch_i => stretch,
+			slope_i => slope,
+		lfo_rate_i => lfo_rate,
+even_gain_i => even_gain,
+odd_gain_i  => odd_gain,
+			osc_freq_o=> osc_freq,
+			osc_en_o => osc_en,
+			amp_o => amp
+			);
+osc_bank_inst: osc_bank
+	generic map(NUM_OSC => NUM_OSC,
+			PA_WIDTH => PA_WIDTH,-- TODO REPLACE W CONST
+			ROM_DATA_WIDTH => ROM_DATA_WIDTH,-- TODO REPLACE W CONST
+			ROM_ADDR_WIDTH => ROM_ADDR_WIDTH,-- TODO REPLACE W CONST);
+			AMP_WIDTH =>AMP_WIDTH)
+	port map (clk_i => clk_98,
+			rst_i => rst,
+			freq_i => osc_freq,
+			osc_en_i => osc_en,
+			samp_start_i => samp_start,
+			amp_i => amp,
+			sum_o  => sum_out
+			);
+		  
+		  
+		  
   --------------------------------
 		process (KEY)
 			begin
