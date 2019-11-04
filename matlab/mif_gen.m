@@ -35,7 +35,7 @@ end
 range_v = max_v - min_v;
 
 values = (randi(range_v - 1, ram_size, 1)) + min_v;
-
+values =sine_table;
 
 %-------------------------------------------------------------------
 % Open mif file for write
