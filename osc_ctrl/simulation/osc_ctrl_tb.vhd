@@ -25,10 +25,11 @@ component osc_ctrl is
 	port (clk_i : in std_logic;
 		rst_i    : in  std_logic;
 		samp_start_i : in std_logic;
-		num_osc_i   : in integer range 0 to 512; -- todo 512 as constant MAX osc number
+		num_osc_i   : in integer range 0 to NUM_OSC; -- todo 512 as constant MAX osc number
 		freq_i		: in unsigned(PA_WIDTH-1 downto 0);
 		stretch_i 	:in integer range 0 to 1023;
-		slope_i		:in signed(AMP_WIDTH-1 downto 0);
+		slope_i		:in signed(AMP_WIDTH-2 downto 0);
+		lfo_rate_i	: in unsigned(AMP_WIDTH-1 downto 0);
 		even_gain_i 	: in unsigned(AMP_WIDTH-1 downto 0);
 		odd_gain_i	: in unsigned(AMP_WIDTH-1 downto 0);
 		osc_freq_o   : out  unsigned (PA_WIDTH-1 downto 0); -- phase_acc keyword 
@@ -60,12 +61,13 @@ end component;
 	signal freq: unsigned (PA_WIDTH-1 downto 0);
 	signal amp :unsigned(AMP_WIDTH-1 downto 0);
 	signal stretch : integer range 0 to 1023 := 0;
- 	signal slope : signed(AMP_WIDTH-1 downto 0) := (others=>'0');
+ 	signal slope : signed(AMP_WIDTH-2 downto 0) := (others=>'0');
 	
 	signal osc_en : std_logic_vector (NUM_OSC -1 downto 0);
 	signal osc_freq : unsigned (PA_WIDTH-1 downto 0);
 	signal sum_out : signed (23 downto 0);
 	signal even_gain, odd_gain : unsigned(AMP_WIDTH-1 downto 0);
+	signal lfo_rate : unsigned( AMP_WIDTH-1 downto 0);
 	-------
 	begin 
 	DUT: osc_ctrl
@@ -81,6 +83,7 @@ end component;
 			freq_i => freq,
 			stretch_i => stretch,
 			slope_i => slope,
+		lfo_rate_i => lfo_rate,
 even_gain_i => even_gain,
 odd_gain_i  => odd_gain,
 			osc_freq_o=> osc_freq,
@@ -116,10 +119,10 @@ osc_bank_inst: osc_bank
 	    wait until rst = '0';
 	    	freq <= to_unsigned(0,PA_WIDTH);
 	  	even_gain <= to_unsigned(2**AMP_WIDTH-1,AMP_WIDTH);
-		odd_gain <= to_unsigned(0,AMP_WIDTH);
+		odd_gain <= to_unsigned(2**AMP_WIDTH-1,AMP_WIDTH);
 	    	stretch <= 0;
-	    	slope <= to_signed(-1000,slope'left+1);
-
+	    	slope <= to_signed(001,slope'left+1);
+		lfo_rate <= to_unsigned(0001,lfo_rate'left +1);
 --	    enable <= (others => '0');
       	    wait until clk = '1' and samp_start = '1';
  	        freq <= to_unsigned(262144*8,PA_WIDTH);
@@ -138,14 +141,14 @@ osc_bank_inst: osc_bank
     	    --rst <= '1';
      --       wait for 4000 ns; 
     --	    rst <= '0';
-	    wait for 2 ms;
+	    wait for 50 us;
             assert false
     	report "simulation over"
 	severity failure;
         end process;
 
 	samp_process :process (clk)
-	variable count :integer range 0 to NUM_OSC+4 :=0;
+	variable count :integer range 0 to 2048 :=0;
 	begin
 	if rising_edge(clk) then
 	    if rst = '1' then
@@ -153,7 +156,7 @@ osc_bank_inst: osc_bank
 	        samp_start <= '0';
 	
 	    else
-		if count = num_osc+4 then	
+		if count = 2048 then	
     	    	    samp_start <= '1';
 		    count :=0;
 
