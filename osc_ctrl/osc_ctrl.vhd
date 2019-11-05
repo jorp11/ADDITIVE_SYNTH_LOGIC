@@ -3,6 +3,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+library work;
+use work.type_pkg.all;
 
 entity osc_ctrl is
 	generic (NUM_OSC : integer := 4;
@@ -18,6 +20,7 @@ entity osc_ctrl is
 		stretch_i 	: in integer range 0 to 1023;
 		slope_i		:in signed(AMP_WIDTH-2 downto 0);
 		lfo_rate_i	: in unsigned(AMP_WIDTH-1 downto 0);
+		lfo_shape_i : in lfo_shape_t;
 		even_gain_i 	: in unsigned(AMP_WIDTH-1 downto 0);
 		odd_gain_i	: in unsigned(AMP_WIDTH-1 downto 0);
 		osc_freq_o   : out  unsigned (PA_WIDTH-1 downto 0); -- phase_acc keyword 
@@ -28,19 +31,19 @@ entity osc_ctrl is
 end osc_ctrl;
 
 architecture behavioral of osc_ctrl is
-constant MAX_FREQ : unsigned (PA_WIDTH-1 downto 0) := to_unsigned(2**(PA_WIDTH-1)-1,PA_WIDTH);--(PA_WIDTH-1 => '1', others =>'0');
+constant MAX_FREQ : unsigned (PA_WIDTH-1 downto 0) := to_unsigned(2**(PA_WIDTH-2)-1,PA_WIDTH);--(PA_WIDTH-1 => '1', others =>'0');
 --constant LFO_RATE : signed (AMP_WIDTH-1 downto 0) := to_signed(2**(AMP_WIDTH-3)-1,AMP_WIDTH);
 constant LFO_WIDTH : integer := AMP_WIDTH;
-constant LFO_DEPTH : signed (AMP_WIDTH-1 downto 0) := to_signed(2**(AMP_WIDTH-2)-1,AMP_WIDTH);
+constant LFO_DEPTH : signed (AMP_WIDTH-1 downto 0) := (others=>'0');--to_signed(2**(AMP_WIDTH-2)-1,AMP_WIDTH);
 constant MAX_AMP : signed (AMP_WIDTH+2 downto 0) := to_signed(2**(AMP_WIDTH)-2,AMP_WIDTH+3);
 constant MIN_AMP : signed (AMP_WIDTH+2 downto 0) :=to_signed(-2**(AMP_WIDTH+2)+(2**LFO_WIDTH)+1,AMP_WIDTH+3 );
 
 -- OSC BANK
-	signal osc_freq,osc_freq_n   : unsigned(PA_WIDTH-1 downto 0);--integer range 0 to 2**(PA_WIDTH-1)-1;-- std_logic_vector(PA_WIDTH-1 downto 0); 
-	signal fund_freq : unsigned(PA_WIDTH-1 downto 0);-- range 0 to 2**(PA_WIDTH-1)-1;
-	signal stretch : integer range 0 to 1023;
-	signal slope : signed(slope_i'left downto 0);
-signal lfo_rate : unsigned (LFO_WIDTH-1 downto 0);
+	signal osc_freq,osc_freq_n   : unsigned(PA_WIDTH-1 downto 0):=(others=>'0');--integer range 0 to 2**(PA_WIDTH-1)-1;-- std_logic_vector(PA_WIDTH-1 downto 0); 
+	signal fund_freq : unsigned(PA_WIDTH-1 downto 0):=(others=>'0');-- range 0 to 2**(PA_WIDTH-1)-1;
+	signal stretch : integer range 0 to 1023 :=0;
+	signal slope : signed(slope_i'left downto 0):=(others=>'0');
+signal lfo_rate : unsigned (LFO_WIDTH-1 downto 0):=(others=>'0');
 		
 	signal osc_en : std_logic_vector (NUM_OSC-1 downto 0);
 	signal freq : unsigned(PA_WIDTH-1 downto 0);
@@ -52,7 +55,7 @@ signal lfo_rate : unsigned (LFO_WIDTH-1 downto 0);
 	signal samp_start: std_logic;
 	signal sample_count : integer :=0;
 	------------------------------------
-	signal lfo,lfo_saw,lfo_tri,lfo_sq : signed (AMP_width-1 downto 0);
+	signal lfo,lfo_sel,lfo_saw,lfo_tri,lfo_sq : signed (AMP_width-1 downto 0);
 	signal lfo_scale : signed (35 downto 0);
 begin
 	--sample input freq once per sample - could make this slower
@@ -88,7 +91,7 @@ begin
 			    osc_freq <= osc_freq_n;	
 			    osc_en <= osc_en(NUM_OSC-2 downto 0) & '0';
 			    
-	   		    amp_slope <= amp_slope + slope_i + lfo;
+	   		    amp_slope <= amp_slope + slope + lfo;
 				
 			    if amp_slope >  MAX_AMP then
 				amp_n <= MAX_AMP;
@@ -184,7 +187,17 @@ begin
 		end if;
 	end if;
 	end process;
-
-	lfo_scale <=(lfo_tri & b"00" )*(lfo_depth & b"00");
+	
+	process (lfo_shape_i,lfo_tri,lfo_saw,lfo_sq)
+	begin
+		case(lfo_shape_i) is
+			when TRI => lfo_sel <= lfo_tri;
+			when SQUARE => lfo_sel <= lfo_saw;
+			when SAW =>lfo_sel <= lfo_sq;
+			when others => lfo_sel <= (others=>'0');
+		end case;
+	end process;
+	
+	lfo_scale <=(lfo_sel & b"00" )*(lfo_depth & b"00");
 	lfo<=lfo_scale (35 downto 20);
 end behavioral;
