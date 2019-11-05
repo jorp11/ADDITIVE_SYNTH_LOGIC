@@ -34,7 +34,7 @@ if (max_v > max_val)
 end
 range_v = max_v - min_v;
 
-values = (randi(range_v - 1, ram_size, 1)) + min_v;
+%values = (randi(range_v - 1, ram_size, 1)) + min_v;
 values =sine_table;
 
 %-------------------------------------------------------------------
