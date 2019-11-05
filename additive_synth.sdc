@@ -1,3 +1,4 @@
-create_clock -name CLOCK_50 -period 20 [get_ports {CLOCK_50}]
-
-create_clock -name clock_98 -period 10.2 [get_ports {CLOCK_50}]
+create_clock -name clk_i -period 20 [get_ports {clk_i}]
+derive_pll_clocks
+set_input_delay -clock clk_i -max 3 [all_inputs]
+set_input_delay -clock clk_i -min 1 [all_inputs]
