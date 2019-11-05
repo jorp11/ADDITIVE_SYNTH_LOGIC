@@ -18,7 +18,6 @@ entity osc_bank is
 		samp_start_i : in std_logic;
 		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
 		amp_i	 : in unsigned (AMP_WIDTH-1 downto 0);
-		--osc_ind_o : out integer;
 		sum_o    : out signed (23 downto 0)
 	);
 end osc_bank;
@@ -54,6 +53,7 @@ architecture behavioral of osc_bank is
 	
 	signal phase_array    : phase_array_t;
 	signal phase_acc_o        : std_logic_vector(PA_WIDTH-1 downto 0);
+	attribute noprune: boolean; attribute noprune of phase_acc_o: signal is true;
 	signal sin_out 		  : signed(ROM_DATA_WIDTH-1 downto 0);--std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
 	signal rom_addr,rom_addr_n1,rom_addr_n2,romb_addr          : std_logic_vector(ROM_ADDR_WIDTH-1-2 downto 0); -- take off two bits for quarter table!
 	signal roma_out, romb_out,roma_out_n1 : std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
