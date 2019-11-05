@@ -18,10 +18,10 @@ signal rff1 : std_logic;
 	process(clk_i,async_rst_i)
 	begin
 	if async_rst_i = '1' then
-		rff1 <= '0';
-		sync_rst_o <= '0';
-	elsif (rising_edge(clk_i)) then
 		rff1 <= '1';
+		sync_rst_o <= '1';
+	elsif (rising_edge(clk_i)) then
+		rff1 <= '0';
 		sync_rst_o <= rff1;
 		end if;
 	end process;
