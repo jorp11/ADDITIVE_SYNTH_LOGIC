@@ -70,3 +70,6 @@ additive_synth_top_level/.DS_Store
 *.cnx
 *.txt
 oscillator/simulation/work/_info
+oscillator/simulation/wlftb78eq8
+db/additive_synth.db_info
+db/additive_synth.cmp.rdb
