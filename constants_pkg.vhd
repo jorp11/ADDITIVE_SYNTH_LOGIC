@@ -4,6 +4,8 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 USE ieee.math_real.log2;
 USE ieee.math_real.ceil;
+library work;
+use work.type_pkg.all;
 
 package constants_pkg is
 
@@ -14,6 +16,9 @@ constant ROM_DATA_WIDTH : integer :=16;
 constant OUT_BIT_DEPTH : integer := 24;
 constant NUM_OSC: integer := 64;
 	constant AMP_WIDTH : integer :=16;
+	
+	
+	
 
 component osc_ctrl is
 	generic (NUM_OSC : integer := 4;
@@ -29,6 +34,7 @@ component osc_ctrl is
 		stretch_i 	:in integer range 0 to 1023;
 		slope_i		:in signed(AMP_WIDTH-2 downto 0);
 		lfo_rate_i	: in unsigned(AMP_WIDTH-1 downto 0);
+		lfo_shape_i : in lfo_shape_t;
 		even_gain_i 	: in unsigned(AMP_WIDTH-1 downto 0);
 		odd_gain_i	: in unsigned(AMP_WIDTH-1 downto 0);
 		osc_freq_o   : out  unsigned (PA_WIDTH-1 downto 0); -- phase_acc keyword 
@@ -50,7 +56,6 @@ end component;
 		samp_start_i : in std_logic;
 		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
 		amp_i	 : in unsigned (AMP_WIDTH-1 downto 0);
-		--osc_ind_o : out integer;
 		sum_o    : out signed (23 downto 0)
 	);
 	end component;
@@ -96,6 +101,19 @@ component i2s_tx is
         audio_r_i   : in  std_logic_vector (OUT_BIT_DEPTH-1 downto 0);
         tx_o        : out std_logic);
 end component;
+	
+component i2s_rx is
+    generic (BITDEPTH :    integer := 24);
+    port (clk_i       : in std_logic;
+        rst_i       : in  std_logic;
+        bclk_i      : in  std_logic; -- Bit clock
+        lr_ws_i     : in  std_logic; -- Word select /LR clk
+        sampstart_i : in  std_logic;
+        audio_l_o   : out  std_logic_vector (BITDEPTH-1 downto 0);
+        audio_r_o   : out  std_logic_vector (BITDEPTH-1 downto 0);
+        rx_i        : in std_logic);
+end component;	
+	
 	
 	 component audio_clk is
     generic (MCLK_DIVRATIO : integer;  -- 98.3MHZ/8 = 12.28 MHz Mclk (48Khz*256)
