@@ -1,10 +1,15 @@
--- This module makes a frequency argument and adds it to a phase accumulator 
+-- This module takes frequency arguments and adds them to a phase accumulator bank
+-- The phase is converted to a sinusoid using a 1/4 wave table to save space
+-- The output is scaled and summed once per sample to create the additive output
 
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use ieee.math_real.log2;
 use ieee.math_real.ceil;
+library work;
+use work.constants_pkg.all;
+
 entity osc_bank is
 	generic (NUM_OSC : integer := 4;
 			PA_WIDTH : integer := 32;   
@@ -18,7 +23,7 @@ entity osc_bank is
 		samp_start_i : in std_logic;
 		--phase_i  : in std_logic_vector (PA_WIDTH-1 downto 0);
 		amp_i	 : in unsigned (AMP_WIDTH-1 downto 0);
-		sum_o    : out signed (23 downto 0)
+		sum_o    : out signed (DAC_BITS-1 downto 0)
 	);
 end osc_bank;
 
@@ -39,9 +44,6 @@ architecture behavioral of osc_bank is
 	end component;
 
 	component sine_rom is
---		generic(DATA_WIDTH : integer := ROM_DATA_WIDTH;
---				ADDR_WIDTH : integer := ROM_ADDR_WIDTH
---				 );
 		port (
 		 	address_a : in std_logic_vector(ROM_ADDR_WIDTH-1-2 downto 0);
 		 	address_b : in std_logic_vector(ROM_ADDR_WIDTH-1-2 downto 0);
@@ -53,14 +55,14 @@ architecture behavioral of osc_bank is
 	
 	signal phase_array    : phase_array_t;
 	signal phase_acc_o        : std_logic_vector(PA_WIDTH-1 downto 0);
-	attribute noprune: boolean; attribute noprune of phase_acc_o: signal is true;
-	signal sin_out 		  : signed(ROM_DATA_WIDTH-1 downto 0);--std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
+		attribute noprune: boolean; attribute noprune of phase_acc_o: signal is true;
+	signal sin_out 		  : signed(ROM_DATA_WIDTH downto 0);--std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
 	signal rom_addr,rom_addr_n1,rom_addr_n2,romb_addr          : std_logic_vector(ROM_ADDR_WIDTH-1-2 downto 0); -- take off two bits for quarter table!
 	signal roma_out, romb_out,roma_out_n1 : std_logic_vector(ROM_DATA_WIDTH-1 downto 0);
 	signal negate             : std_logic_vector(1 downto 0); -- used to negate rom address
 	signal osc_en_n1,osc_en_n2 : std_logic_vector(NUM_OSC-1 downto 0);
-	signal sample_acc : signed(OSC_BITS + ROM_DATA_WIDTH + 1 + AMP_WIDTH +1 -1 downto 0); -- ROM data plus sign ext plus 1 bit every log2 osc
-	signal sample_sum : signed(23 downto 0); -- TODO add  CONSTANT DAC_BITS
+	signal sample_acc : signed(OSC_BITS + 35 downto 0); -- ROM data plus sign ext plus 1 bit every log2 osc
+	signal sample_sum : signed(DAC_BITS-1 downto 0); -- TODO add  CONSTANT DAC_BITS
         signal rom_d_val,rom_d_val_n1,rom_d_val_n2,rom_d_val_n3 : std_logic :='0';  
 signal amp_delay_r : amp_reg_t;        
 signal scaled_sine : signed (35 downto 0);--(ROM_DATA_WIDTH+AMP_WIDTH downto 0);                                          --------------------------------
@@ -122,7 +124,7 @@ rom_addr_map : process (clk_i)
 				rom_d_val_n2 <= '0';
 				rom_d_val_n3 <= '0';
 			else
-				roma_out_n1 <= roma_out; -- TODO deal with this
+				roma_out_n1 <= roma_out; 
 				rom_addr_n2 <= rom_addr_n1;
 				rom_addr_n1 <= rom_Addr;
 				negate(0)  <= phase_acc_o(PA_WIDTH-1);
@@ -141,9 +143,9 @@ rom_addr_map : process (clk_i)
 
 				if (negate(1)= '1')then
 					--sin_out <= (1 & roma_out_n1(ROM_DATA_WIDTH-1dow)) + 1;-- signed(roma_out);
-				sin_out <= signed(not('0' & std_logic_vector(roma_out(ROM_DATA_WIDTH-1 downto 1))))+ 1;
+				sin_out <= signed(not('0' & std_logic_vector(roma_out(ROM_DATA_WIDTH-1 downto 0))))+ 1;
 				else
-					sin_out <= signed('0' & std_logic_vector(roma_out(ROM_DATA_WIDTH-1 downto 1)));
+					sin_out <= signed('0' & std_logic_vector(roma_out(ROM_DATA_WIDTH-1 downto 0)));
 				end if;
 			end if;
 		end if;
@@ -164,20 +166,19 @@ sine_rom_inst : sine_rom PORT MAP (
 	begin
 	if rising_edge(clk_i) then
 	    if rst_i = '1' then
-		sample_acc <= (others => '0');
+		     sample_acc <= (others => '0');
 	    elsif samp_start_i = '1' then
-		sample_acc <= (others => '0');
+		     sample_acc <= (others => '0');
 	    else
-		if rom_d_val_n3= '1' then
+		    if rom_d_val_n3= '1' then
 		--sample_acc <= sample_acc + scaled_sine(scaled_sine'left downto 8); --with mult
-		sample_acc <= sample_acc + scaled_sine;
---sample_Acc <= sample_acc + sin_out;
-		end if;
+		        sample_acc <= sample_acc + scaled_sine;
+		    end if;
 	    end if;
 	end if;	
 	end process;
-	-- sign extend unsigned 8 bit amplitude to 9 and convert to "signed"00"));
-	scaled_sine <= signed('0' & std_logic_vector(amp_delay_r(4) & '0' ))*signed(sin_out& "00");
+	-- sign extend unsigned 16 bit amplitude to 18 and convert to signed
+	scaled_sine <= signed('0' & std_logic_vector(amp_delay_r(4) & '0' ))*signed(sin_out& "0");
 	process (clk_i)
 	begin
 	if rising_edge(clk_i) then
@@ -188,6 +189,7 @@ sine_rom_inst : sine_rom PORT MAP (
 		end if;
 	end if;
 	end process;
+	
 
 	sum_o <= sample_sum;
 end behavioral;
