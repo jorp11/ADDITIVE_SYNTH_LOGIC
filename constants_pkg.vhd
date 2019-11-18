@@ -10,11 +10,13 @@ use work.type_pkg.all;
 package constants_pkg is
 
  --- CONSTANTS 
- constant PA_WIDTH : integer := 32;
+ constant PA_WIDTH : integer := 24;
 constant ROM_ADDR_WIDTH : integer :=14;
 constant ROM_DATA_WIDTH : integer :=16;
 constant OUT_BIT_DEPTH : integer := 24;
 constant NUM_OSC: integer := 64;
+constant DAC_BITS : integer :=24;
+constant MIN_FREQ : integer := 20/48000*(2**PA_WIDTH); -- resolution :48000 samples/s * 2**32 samples 
 	constant AMP_WIDTH : integer :=16;
 	
 	
@@ -31,7 +33,8 @@ component osc_ctrl is
 		samp_start_i : in std_logic;
 		num_osc_i   : in integer range 0 to NUM_OSC; -- todo 512 as constant MAX osc number
 		freq_i		: in unsigned(PA_WIDTH-1 downto 0);
-		stretch_i 	:in integer range 0 to 1023;
+		stretch_i 	:in unsigned(17 downto 0);
+		cutoff_i		: in integer range 0 to NUM_OSC-1;
 		slope_i		:in signed(AMP_WIDTH-2 downto 0);
 		lfo_rate_i	: in unsigned(AMP_WIDTH-1 downto 0);
 		lfo_shape_i : in lfo_shape_t;

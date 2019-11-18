@@ -15,7 +15,7 @@ entity phase_acc is
 end phase_acc;
 
 architecture behavioral of phase_acc is
-signal phase_acc : unsigned(PA_WIDTH-1 downto 0);
+signal phase_acc : unsigned(PA_WIDTH-1 downto 0):= (others=>'0');
 	--------------------------------
 	begin
 	
