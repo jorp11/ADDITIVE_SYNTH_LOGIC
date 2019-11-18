@@ -17,7 +17,8 @@ entity osc_ctrl is
 		samp_start_i : in std_logic;
 		num_osc_i   : in integer range 0 to NUM_OSC; -- todo 512 as constant MAX osc number
 		freq_i		: in unsigned(PA_WIDTH-1 downto 0);
-		stretch_i 	: in integer range 0 to 1023;
+		stretch_i 	: in unsigned (17 downto 0);
+		cutoff_i		: in integer range 0 to NUM_OSC-1;
 		slope_i		:in signed(AMP_WIDTH-2 downto 0);
 		lfo_rate_i	: in unsigned(AMP_WIDTH-1 downto 0);
 		lfo_shape_i : in lfo_shape_t;
@@ -41,7 +42,7 @@ constant MIN_AMP : signed (AMP_WIDTH+2 downto 0) :=to_signed(-2**(AMP_WIDTH+2)+(
 -- OSC BANK
 	signal osc_freq,osc_freq_n   : unsigned(PA_WIDTH-1 downto 0):=(others=>'0');--integer range 0 to 2**(PA_WIDTH-1)-1;-- std_logic_vector(PA_WIDTH-1 downto 0); 
 	signal fund_freq : unsigned(PA_WIDTH-1 downto 0):=(others=>'0');-- range 0 to 2**(PA_WIDTH-1)-1;
-	signal stretch : integer range 0 to 1023 :=0;
+	signal stretch : unsigned(17 downto 0) := (others=>'0');
 	signal slope : signed(slope_i'left downto 0):=(others=>'0');
 signal lfo_rate : unsigned (LFO_WIDTH-1 downto 0):=(others=>'0');
 		
@@ -57,6 +58,8 @@ signal lfo_rate : unsigned (LFO_WIDTH-1 downto 0):=(others=>'0');
 	------------------------------------
 	signal lfo,lfo_sel,lfo_saw,lfo_tri,lfo_sq : signed (AMP_width-1 downto 0);
 	signal lfo_scale : signed (35 downto 0);
+	signal osc_stretch : unsigned (PA_WIDTH+18-1 downto 0);
+	
 begin
 	--sample input freq once per sample - could make this slower
 	main: process (clk_i)
@@ -65,7 +68,7 @@ begin
 	if rising_edge(clk_i) then
 		if rst_i = '1'then
 			fund_freq <= (others=>'0');
-			stretch <= 0;
+			stretch <= (others=>'0');
 			slope <=  (others =>'0');
 			count := 0;
 			osc_en <= (others =>'0');
@@ -84,19 +87,28 @@ begin
 			    slope <= slope_i;
 			    osc_en <= std_logic_vector(to_unsigned(1,NUM_OSC));
 			    amp <= to_unsigned(2**(AMP_WIDTH-1),AMP_WIDTH);
-			    amp_slope <= to_signed(2**(AMP_WIDTH-1),amp_slope'left+1) + slope_i;
+				 if cutoff_i > 0 then
+					amp_slope <= to_signed(2**(AMP_WIDTH-1),amp_slope'left+1);
+				 else
+					amp_slope <= to_signed(2**(AMP_WIDTH-1),amp_slope'left+1) + slope_i;
+				 end if;
 			    amp_n <=to_signed(2**(AMP_WIDTH-1),amp_n'left+1) + slope_i;
 			else
 			    osc_freq_n <= osc_freq_n+fund_freq; --TODO multiply by stretch/compress
+				 osc_stretch <= (osc_freq_n+fund_freq)*stretch;
 			    osc_freq <= osc_freq_n;	
 			    osc_en <= osc_en(NUM_OSC-2 downto 0) & '0';
-			    
+				 if  count < cutoff_i then
+					amp_slope <= to_signed(2**(AMP_WIDTH-1),amp_slope'left+1) +lfo;
+				 else
 	   		    amp_slope <= amp_slope + slope + lfo;
-				
+				end if;
 			    if amp_slope >  MAX_AMP then
 				amp_n <= MAX_AMP;
+				amp_slope <= MAX_AMP;
 			    elsif amp_slope < MIN_AMP then
-				amp_n <= MIN_AMP;
+					amp_n <= MIN_AMP;
+					amp_slope <= MIN_AMP;
 			    else
 				 	amp_n <= amp_slope;      
 			    end if;
@@ -127,7 +139,7 @@ begin
 		end if;
 	end process;
         --odd_scaled <=(amp_n(AMP_WIDTH-1 downto 0) & "00") * signed(odd_gain_i & "00"); 
-        even_scaled <=unsigned(std_logic_vector((amp_n(AMP_WIDTH-1 downto 0) & "00"))) * (even_gain_i & "00"); 
+    even_scaled <=unsigned(std_logic_vector((amp_n(AMP_WIDTH-1 downto 0) & "00"))) * (even_gain_i & "00"); 
 	odd_scaled <=unsigned(std_logic_vector((amp_n(AMP_WIDTH-1 downto 0) & "00"))) * (odd_gain_i & "00"); 
 	amp_o <= amp;
 	osc_en_o <= osc_en;
@@ -198,6 +210,6 @@ begin
 		end case;
 	end process;
 	
-	lfo_scale <=(lfo_sel & b"00" )*(lfo_depth & b"00");
+	lfo_scale <=(lfo_sel & b"00" )*(lfo_depth & b"00"); -- extend to 18x18
 	lfo<=lfo_scale (35 downto 20);
 end behavioral;
