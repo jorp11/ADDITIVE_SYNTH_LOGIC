@@ -19,6 +19,8 @@ constant DAC_BITS : integer :=24;
 constant MIN_FREQ : integer := 20/48000*(2**PA_WIDTH); -- resolution :48000 samples/s * 2**32 samples 
 	constant AMP_WIDTH : integer :=16;
 	
+	constant ADC_WIDTH : integer :=12;
+	
 	
 	
 
@@ -133,5 +135,24 @@ end component;
         samp_start_o : out std_logic
     );
 	end component;
-
+	
+	
+	component adc_interface is
+	port (addr : in std_logic_vector (2 downto 0);
+			data : out std_logic_vector(11 downto 0); 
+			sclk : in std_logic;
+			rst  : in std_logic;
+			din  : in std_logic;
+			dout : out std_logic);
+			end component;
+			
+	component adc is
+	port (adc_addr_o : out std_logic_vector (2 downto 0);
+			adc_data_o : out std_logic_vector(11 downto 0); 
+			sclk_i : in std_logic;
+			rst_i  : in std_logic;
+			din_i  : in std_logic;
+			dout_o : out std_logic);			
+			
+				end component;		
 	end package constants_pkg;

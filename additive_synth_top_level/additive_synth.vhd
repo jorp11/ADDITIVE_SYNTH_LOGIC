@@ -1,9 +1,8 @@
 library  ieee;
-use  ieee.std_logic_1164.all;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-USE ieee.math_real.log2;
-USE ieee.math_real.ceil;
+use ieee.math_real.log2;
+use ieee.math_real.ceil;
 library work;
 use work.constants_pkg.all; -- TODO rename this
 use work.type_pkg.all;
@@ -19,7 +18,12 @@ entity additive_synth is
 			codec_1_ws_o : out std_logic;
 			codec_1_rx_i : in std_logic;
 			codec_1_tx_o: out std_logic;
-			codec_1_rst_o : out std_logic
+			codec_1_rst_o : out std_logic;
+			ADC_SDAT : in std_logic;
+			ADC_SADDR : out std_logic;
+			ADC_CS_N : out std_logic;
+			ADC_SCLK : out std_logic
+			
 		--	codec_2_mclk_o : out std_logic;
 		--	codec_2_bclk_o : out std_logic;
 		--	codec_2_ws_o : out std_logic;
@@ -94,6 +98,14 @@ end component;
 	
 	signal emphasis : signed (AMP_WIDTH-2 downto 0) := (others=>'0');
 	signal emp_width : integer range 0 to NUM_OSC/2 := 0;
+	
+	---ADC signals
+	
+		signal adc_addr : std_logic_vector (2 downto 0) := (others=>'0'); -- TODO : modify for all 8 adcs
+		signal adc_data :std_logic_vector  (11 downto 0);
+		signal adc_din : std_logic;
+		signal adc_dout : std_logic;
+	
 	--------------------------------
 	begin
 	--- INSTANTIATIONS
@@ -233,27 +245,48 @@ end component;
 					sum_o  => sum_out
 					);
 		
+--		
+--	adc_interface_inst : adc_interface 
+--		port map (addr => adc_addr, -- 00 for now
+--					data => adc_data,
+--					sclk => bclk,
+--					rst => rst, -- TODO retime reset to bclk domain.
+--					din => adc_SDAT,
+--					dout => adc_SADDR
+--					);
+  adc_sclk <= bclk;
+	adc_cs_n <= (rst);
+	
+	adc_inst : adc
+	port map (adc_addr_o => adc_addr,
+			adc_data_o => adc_data,
+			sclk_i => bclk,
+			rst_i  => rst,
+			din_i  => adc_SDAT,
+			dout_o => adc_SADDR);		
+	
+	
   --------------------------------
-  process(clk_98)
-  variable max : unsigned (23 downto 0) :=(others=>'0');
-  variable abs_val : unsigned (23 downto 0) := (others=>'0');
-  variable gain : unsigned (17 downto 0):=  (others=>'0');
-  begin
-	if rising_edge(clk_98) then
-		if rst ='1' then
-			max := (others=>'0');
-			abs_val := (others=>'0');
-		else
-			abs_val := unsigned(abs(sum_out));
-			if abs_val >max then
-				max := abs_val;
-			end if;
-			if max < (2**23-2) then
-				gain := gain +1;
-			end if;
-		end if;
-	end if;
-  end process;
+--  process(clk_98)
+--  variable max : unsigned (23 downto 0) :=(others=>'0');
+--  variable abs_val : unsigned (23 downto 0) := (others=>'0');
+--  variable gain : unsigned (17 downto 0):=  (others=>'0');
+--  begin
+--	if rising_edge(clk_98) then
+--		if rst ='1' then
+--			max := (others=>'0');
+--			abs_val := (others=>'0');
+--		else
+--			abs_val := unsigned(abs(sum_out));
+--			if abs_val >max then
+--				max := abs_val;
+--			end if;
+--			if max < (2**23-2) then
+--				gain := gain +1;
+--			end if;
+--		end if;
+--	end if;
+--  end process;
   
 		process (KEY)
 			begin
