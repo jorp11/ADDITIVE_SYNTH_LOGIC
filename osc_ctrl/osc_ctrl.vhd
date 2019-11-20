@@ -20,6 +20,8 @@ entity osc_ctrl is
 		stretch_i 	: in unsigned (17 downto 0);
 		cutoff_i		: in integer range 0 to NUM_OSC-1;
 		slope_i		:in signed(AMP_WIDTH-2 downto 0);
+		emphasis_i	: in signed (AMP_WIDTH-2 downto 0);
+		emp_width_i : in integer range 1 to NUM_OSC/2;
 		lfo_rate_i	: in unsigned(AMP_WIDTH-1 downto 0);
 		lfo_shape_i : in lfo_shape_t;
 		even_gain_i 	: in unsigned(AMP_WIDTH-1 downto 0);

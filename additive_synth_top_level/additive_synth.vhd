@@ -91,6 +91,9 @@ end component;
 	signal lfo_rate : unsigned( AMP_WIDTH-1 downto 0) :=(0=>'1',others=>'0');
 	signal lfo_shape : lfo_shape_t := SQUARE;
 	signal sine_48 : signed(15 downto 0);
+	
+	signal emphasis : signed (AMP_WIDTH-2 downto 0) := (others=>'0');
+	signal emp_width : integer range 0 to NUM_OSC/2 := 0;
 	--------------------------------
 	begin
 	--- INSTANTIATIONS
@@ -204,6 +207,8 @@ end component;
 					stretch_i => stretch,
 					cutoff_i =>cutoff,
 					slope_i => slope,
+					emphasis_i => emphasis,
+					emp_width_i =>emp_width,
 					lfo_rate_i => lfo_rate,
 					lfo_shape_i => lfo_shape,
 					even_gain_i => even_gain,
@@ -213,7 +218,6 @@ end component;
 					amp_o => amp
 					);
 	--------------------------------	
-
 	osc_bank_inst: osc_bank
 	generic map(NUM_OSC => NUM_OSC,
 					PA_WIDTH => PA_WIDTH,
