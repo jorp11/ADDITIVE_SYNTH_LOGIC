@@ -14,7 +14,7 @@ package constants_pkg is
 constant ROM_ADDR_WIDTH : integer :=14;
 constant ROM_DATA_WIDTH : integer :=16;
 constant OUT_BIT_DEPTH : integer := 24;
-constant NUM_OSC: integer := 64;
+constant NUM_OSC: integer := 24;
 constant DAC_BITS : integer :=24;
 constant MIN_FREQ : integer := 20/48000*(2**PA_WIDTH); -- resolution :48000 samples/s * 2**32 samples 
 	constant AMP_WIDTH : integer :=16;
@@ -135,24 +135,37 @@ end component;
         samp_start_o : out std_logic
     );
 	end component;
-	
-	
-	component adc_interface is
-	port (addr : in std_logic_vector (2 downto 0);
-			data : out std_logic_vector(11 downto 0); 
-			sclk : in std_logic;
-			rst  : in std_logic;
-			din  : in std_logic;
-			dout : out std_logic);
-			end component;
-			
-	component adc is
-	port (adc_addr_o : out std_logic_vector (2 downto 0);
-			adc_data_o : out std_logic_vector(11 downto 0); 
+
+	component adc_driver is
+	port ( clk_i : in std_logic;
+			rst_i : in std_logic;
+			rd_strobe_i : in std_logic; -- strobe
 			sclk_i : in std_logic;
-			rst_i  : in std_logic;
-			din_i  : in std_logic;
-			dout_o : out std_logic);			
+			cs_n_o : out std_logic;
+			adc_sdin_o : out std_logic;
+			adc_sdout_i : in std_logic;
+			adc_dout_o : out unsigned(11 downto 0); --ADC data
+			adc_addr_o : out unsigned(2 downto 0);
+			adc_dval_o : out std_logic
+			);  
+	end component;
+	
+--	component adc_interface is
+--	port (addr : in std_logic_vector (2 downto 0);
+--			data : out std_logic_vector(11 downto 0); 
+--			sclk : in std_logic;
+--			rst  : in std_logic;
+--			din  : in std_logic;
+--			dout : out std_logic);
+--			end component;
 			
-				end component;		
+--	component adc is
+--	port (adc_addr_o : out std_logic_vector (2 downto 0);
+--			adc_data_o : out std_logic_vector(11 downto 0); 
+--			sclk_i : in std_logic;
+--			rst_i  : in std_logic;
+--			din_i  : in std_logic;
+--			dout_o : out std_logic);			
+--	end component;		
+	
 	end package constants_pkg;

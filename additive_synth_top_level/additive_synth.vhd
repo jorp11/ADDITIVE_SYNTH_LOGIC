@@ -101,11 +101,14 @@ end component;
 	
 	---ADC signals
 	
-		signal adc_addr : std_logic_vector (2 downto 0) := (others=>'0'); -- TODO : modify for all 8 adcs
-		signal adc_data :std_logic_vector  (11 downto 0);
-		signal adc_din : std_logic;
-		signal adc_dout : std_logic;
+		signal adc_addr : unsigned (2 downto 0) := (others=>'0'); -- TODO : modify for all 8 adcs
+		signal adc_data :unsigned  (11 downto 0);
+		signal adc_din, adc_dout, adc_dval : std_logic;
+
 	
+		signal adc_ch0,adc_ch1,adc_ch2,adc_ch3 : unsigned(11 downto 0);
+		signal adc_ch4,adc_ch5,adc_ch6,adc_ch7 : unsigned(11 downto 0);
+	   attribute noprune: boolean; attribute noprune of adc_ch0,adc_ch1,adc_ch2,adc_ch3: signal is true;
 	--------------------------------
 	begin
 	--- INSTANTIATIONS
@@ -255,16 +258,46 @@ end component;
 --					dout => adc_SADDR
 --					);
   adc_sclk <= bclk;
-	adc_cs_n <= (rst);
+	--adc_cs_n <= (rst);
 	
-	adc_inst : adc
-	port map (adc_addr_o => adc_addr,
-			adc_data_o => adc_data,
+--	adc_inst : adc
+--	port map (adc_addr_o => adc_addr,
+--			adc_data_o => adc_data,
+--			sclk_i => bclk,
+--			rst_i  => rst,
+--			din_i  => adc_SDAT,
+--			dout_o => adc_SADDR);		
+adc_driver_inst : adc_driver
+	port map ( clk_i =>clk_98,
+			rst_i => rst,
+			rd_strobe_i => frame_start,
 			sclk_i => bclk,
-			rst_i  => rst,
-			din_i  => adc_SDAT,
-			dout_o => adc_SADDR);		
+			cs_n_o =>adc_cs_n,
+			adc_sdin_o => adc_SADDR,
+			adc_sdout_i => adc_SDAT,
+			adc_dout_o => adc_data,
+			adc_addr_o  => adc_addr,
+			adc_dval_o => adc_dval
+			);  
 	
+	process(clk_98)
+	begin
+	if rising_edge(clk_98) then
+	if adc_dval = '1' then
+		case adc_addr is
+			when "000" => adc_ch0 <= adc_data/2 + adc_ch0/2;
+			when "001" => adc_ch1 <= adc_data/2 + adc_ch1/2;
+			when "010" => adc_ch2 <= adc_data/2 + adc_ch2/2;
+			when "011" => adc_ch3 <= adc_data/2 + adc_ch3/2;
+			when "100" => adc_ch4 <= adc_data;
+			when "101" => adc_ch5 <= adc_data;
+			when "110" => adc_ch6 <= adc_data;
+			when "111" => adc_ch7 <= adc_data;
+		end case;
+		
+	end if;
+	end if;
+	end process;
 	
   --------------------------------
 --  process(clk_98)
@@ -307,30 +340,31 @@ end component;
 	begin
 	if rising_edge(clk_98) then
 		if rst = '1' then
-		count :=0;
-		dir :=1;
+			count :=0;
+			dir :=1;
 			freq <= (others=>'0');
 			slope <= to_signed(-1000,slope'left+1) ;
 			stretch <= (others=>'0');
-			even_gain <= (others=>'0');
-			odd_gain <= (others=>'0');
+			even_gain <= (others=>'1');
+			odd_gain <= (others=>'1');
 			lfo_shape <= TRI;
 			lfo_rate <= (others=>'0');
 			freq <= to_unsigned(0,PA_WIDTH); --
 			else
+				freq <= unsigned("000000" & adc_ch1 & "000000") +to_unsigned(20000,PA_WIDTH); 
 			    if frame_start = '1' then
-					freq <= to_unsigned(14396,PA_WIDTH); --
+					--	freq <= 
 
 					--even_gain <= to_unsigned(2**AMP_WIDTH-1,AMP_WIDTH);
-					even_gain <= even_gain + to_unsigned(30,even_gain'left+1) ;
+					even_gain <= unsigned(adc_ch2 & "0000") ;
 					--odd_gain <= to_unsigned(2**AMP_WIDTH-1,AMP_WIDTH);
-					odd_gain <= odd_gain - to_unsigned(30,odd_gain'left+1) ;
+					odd_gain <=  unsigned(adc_ch3 & "0000") ;
 					stretch <= (others=>'0');
 					stretch <= stretch + to_unsigned(1,stretch'left +1);
 					slope <= to_signed(-5000,slope'left+1);
 					--slope <= slope + to_signed(10,slope'left+1) ;
 					lfo_rate <= to_unsigned(0,lfo_rate'left +1);
-					cutoff <= count/8;
+					cutoff <= NUM_OSC-1;--count/8;
 					count := count+dir;
 					if count = NUM_OSC*8-1 then
 						dir := -1;
